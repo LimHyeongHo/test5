@@ -1,5 +1,8 @@
 import React from 'react';
 
+/// [*] 회원가입 페이지와 연결
+import { Link } from 'react-router-dom';
+
 // 피그마 디자인의 배경 이미지가 필요합니다.
 // 이미지를 src/assets 폴더에 넣고 import하거나, 
 // 여기서는 임시로 플레이스홀더 URL을 사용합니다.
@@ -75,7 +78,8 @@ const LoginPage = () => {
               />
             </div>
 
-            {/* 본인인증 실행 버튼 */}
+            {/* 본인인증 실행 버튼 
+                추후 CA 기능 추가 시 여기에 데이터 추가*/}
             <button 
               type="submit" 
               className="w-full mt-2 p-4 bg-blue-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition duration-150 active:scale-[0.98]"
@@ -84,9 +88,11 @@ const LoginPage = () => {
             </button>
           </form>
 
-          {/* 5. 카드 하단 (Footer) */}
+          {/* 5. 카드 하단 (Footer) 
+          [*] 회원가입 페이지와 연결 */}
           <div className="mt-10 text-center text-gray-700">
-            계정이 없으신가요? <a href="#" className="text-blue-600 font-medium hover:underline">회원가입</a>
+            
+            계정이 없으신가요? <Link to="/signup" className="text-blue-600 font-medium hover:underline">회원가입</Link>
           </div>
         </div>
       </main>
