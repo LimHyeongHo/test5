@@ -13,9 +13,9 @@ const Header = () => {
   const menuConfigs = {
     ADMIN: [
       { label: '통합 대시보드', path: '/admin/dashboard' },
-      { label: '회원/권한 관리', path: '/admin/users' },
+      { label: '회원/권한 관리', path: '/admin/authorization' },
       { label: '공동구매 관리', path: '/admin/groups' },
-      { label: '보안/감사 로그', path: '/security' },
+      { label: '보안/감사 로그', path: '/admin/security' },
     ],
     SELLER: [
       { label: '대시보드', path: '/seller/dashboard' },
