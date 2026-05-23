@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, CheckCircle, AlertTriangle, Clock, RefreshCw, Download, Filter, UserCircle } from 'lucide-react';
 
+/// [*] 헤더 컴포넌트 연결
+import Header from '../../components/layout/Header';
+
 // 실시간 보안 감사 로그 가상 데이터 (나중에 DB와 연동할 그릇의 초기값)
 const mockLogs = [
   { id: "TX-99824-B", timestamp: "2026-05-21 14:22:10.455", status: "SUCCESS", diff: "0x0000...0000", detail: "상세 정보" },
@@ -25,26 +28,8 @@ const SecurityLogPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
-      
-      {/* 1. 상단 네비게이션 헤더 (localhost 메인 홈과 100% 동일한 대칭 레이아웃) */}
-      <header className="flex justify-between items-center p-6 border-b border-gray-200 bg-white sticky top-0 z-50 shadow-sm">
-        <div className="font-bold text-2xl tracking-tight text-gray-900 cursor-pointer">
-          <Link to="/">YU-BOOK</Link>
-        </div>
-        <nav className="flex items-center gap-8">
-          <ul className="flex gap-8 text-sm font-medium text-gray-700">
-            <li><Link to="/" className="hover:text-blue-600 transition">공동구매 목록</Link></li>
-            <li><a href="#" className="hover:text-blue-600 transition">마이페이지</a></li>
-            <li><a href="#" className="text-blue-600 font-semibold">보안/감사 로그</a></li>
-          </ul>
-          <div className="h-6 w-[1px] bg-gray-200"></div>
-          <div className="flex items-center gap-2 text-gray-700">
-            <UserCircle size={24} className="text-gray-400" />
-            <span className="font-semibold text-sm">임형호 님</span>
-          </div>
-        </nav>
-      </header>
-
+    {/* [*] 헤더 내용 수정 */}
+    <Header />
       {/* 2. 상단 묵직한 다크 보안 배너 (메인 홈 배너 디자인 계승 + 다크 테마 변환) */}
       <section className="bg-slate-900 text-white py-12 px-6 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-col gap-2">

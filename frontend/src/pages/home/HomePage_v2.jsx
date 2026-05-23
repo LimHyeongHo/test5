@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+/// [*] 헤더 컴포넌트 연결
+import Header from '../../components/layout/Header';
 
 // (나중에 DB 연결 전까지 화면이 깨지지 않도록 임시로 놔두는 가짜 데이터입니다)
 const mockBooks = [
@@ -86,25 +88,8 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
       
-      {/* 상단 네비게이션 헤더 */}
-      <header className="flex justify-between items-center p-6 border-b border-gray-200 bg-white sticky top-0 z-50 shadow-sm">
-        <div className="font-bold text-2xl tracking-tight text-gray-900 cursor-pointer">
-          <Link to="/">YU-BOOK</Link>
-        </div>
-        <nav className="flex items-center gap-8">
-          <ul className="flex gap-8 text-sm font-medium text-gray-700">
-            <li><a href="#" className="text-blue-600 font-semibold">공동구매 목록</a></li>
-            <li><a href="#" className="hover:text-blue-600 transition">마이페이지</a></li>
-            <li><a href="#" className="hover:text-blue-600 transition">고객지원</a></li>
-          </ul>
-          <Link 
-            to="/login" 
-            className="text-xs font-semibold text-gray-500 border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition"
-          >
-            로그아웃
-          </Link>
-        </nav>
-      </header>
+       {/* [*] 헤더 내용 수정 */}
+    <Header />
 
       {/* 메인 히어로 배너 영역 */}
       <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 px-6 shadow-md">

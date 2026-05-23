@@ -1,5 +1,6 @@
 import React from 'react';
-import Sidebar from '../../components/layout/Sidebar';
+import Header from '../../components/layout/Header';
+/// [*] 헤더 컴포넌트 연결
 import Header from '../../components/layout/Header';
 
 const Home = () => {

@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+/// [*] 헤더 컴포넌트 연결
+import Header from '../../components/layout/Header';
 
 // 로그인창과 동일한 배경 이미지를 사용하거나 프로젝트 assets 폴더의 이미지를 연결하세요.
 const backgroundImgUrl = "https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=2600"; 
@@ -7,19 +9,8 @@ const backgroundImgUrl = "https://images.unsplash.com/photo-1589998059171-988d88
 const SignupPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
-      {/* 1. 상단 헤더 (로그인 페이지와 100% 동일한 디자인 유지) */}
-      <header className="flex justify-between items-center p-6 border-b border-gray-200 bg-white">
-        <div className="font-bold text-2xl tracking-tight text-gray-900">
-          YU-BOOK
-        </div>
-        <nav>
-          <ul className="flex gap-8 text-sm font-medium text-gray-700">
-            <li><a href="#" className="hover:text-blue-600">이용약관</a></li>
-            <li><a href="#" className="hover:text-blue-600">개인정보처리방침</a></li>
-            <li><a href="#" className="hover:text-blue-600">고객지원</a></li>
-          </ul>
-        </nav>
-      </header>
+       {/* [*] 헤더 내용 수정 */}
+    <Header />
 
       {/* 2. 메인 콘텐츠 영역 */}
       <main 

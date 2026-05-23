@@ -3,6 +3,9 @@ import React from 'react';
 /// [*] 회원가입 페이지와 연결
 import { Link } from 'react-router-dom';
 
+/// [*] 헤더 컴포넌트 연결
+import Header from '../../components/layout/Header';
+
 // 피그마 디자인의 배경 이미지가 필요합니다.
 // 이미지를 src/assets 폴더에 넣고 import하거나, 
 // 여기서는 임시로 플레이스홀더 URL을 사용합니다.
@@ -11,19 +14,8 @@ const backgroundImgUrl = "https://images.unsplash.com/photo-1589998059171-988d88
 const LoginPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
-      {/* 1. 상단 헤더 (Navigation Bar) */}
-      <header className="flex justify-between items-center p-6 border-b border-gray-200 bg-white">
-        <div className="font-bold text-2xl tracking-tight text-gray-900">
-          YU-BOOK
-        </div>
-        <nav>
-          <ul className="flex gap-8 text-sm font-medium text-gray-700">
-            <li><a href="#" className="hover:text-blue-600">이용약관</a></li>
-            <li><a href="#" className="hover:text-blue-600">개인정보처리방침</a></li>
-            <li><a href="#" className="hover:text-blue-600">고객지원</a></li>
-          </ul>
-        </nav>
-      </header>
+      {/* [*] 헤더 내용 수정 */}
+    <Header />
 
       {/* 2. 메인 콘텐츠 영역 (배경 + 로그인 카드) */}
       <main 
