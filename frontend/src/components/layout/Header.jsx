@@ -12,10 +12,10 @@ const Header = () => {
   // 1. 역할별 메뉴 구성 데이터를 객체 형태로 깔끔하게 정리 (메모리에 저장!)
   const menuConfigs = {
     ADMIN: [
-      { label: '통합 대시보드', path: '/admin/dashboard' },
-      { label: '회원/권한 관리', path: '/admin/authorization' },
-      { label: '공동구매 관리', path: '/admin/groups' },
-      { label: '보안/감사 로그', path: '/admin/security' },
+      { label: '통합 대시보드', path: '/dashboard' },
+      { label: '회원/권한 관리', path: '/authorization' },
+      { label: '공동구매 관리', path: '/groups' },
+      { label: '보안/감사 로그', path: '/security' },
     ],
     SELLER: [
       { label: '대시보드', path: '/seller/dashboard' },
