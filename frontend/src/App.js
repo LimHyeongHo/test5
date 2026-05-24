@@ -9,6 +9,7 @@ import HomePage_v2 from './pages/home/HomePage_v2';
 import SecurityLogPage from './pages/admin/security/SecurityLogPage';
 import UserAuthorization from './pages/admin/authorization/UserAuthorization';
 import AdminDashboardPage from './pages/admin/dashboard/AdminDashboardPage';
+import ProductsManagementPage from './pages/admin/products/ProductsManagementPage';
 
 function App() {
   return (
@@ -25,14 +26,17 @@ function App() {
 
         {/* 홈 화면으로 접속했을 때 보여줄 화면 */}
         <Route path="/home" element={<HomePage_v2 />} />
+
+        { /* ----------------관리자 페이지-----------------*/}
         { /* 보안 로그 화면으로 접속했을 때 보여줄 화면 */ }
         <Route path="/security" element={<SecurityLogPage />} />
-
         { /* 회원 관리 페이지 접속 화면 */}
         <Route path="/authorization" element={<UserAuthorization />} />
-
-        { /* 회원 관리 페이지 접속 화면 */}
+        { /* 대시보드 페이지 접속 화면 */}
         <Route path="/dashboard" element={<AdminDashboardPage />} />
+        { /* 상품관리 페이지 접속 화면 */}
+        <Route path="/products" element={<ProductsManagementPage />} />
+        { /* ---------------------------------------------*/}
 
         {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
         {/* <Route path="/book/:id" element={<BookDetail />} /> */} 

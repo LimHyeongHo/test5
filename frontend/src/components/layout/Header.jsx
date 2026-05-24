@@ -14,7 +14,7 @@ const Header = () => {
     ADMIN: [
       { label: '통합 대시보드', path: '/dashboard' },
       { label: '회원/권한 관리', path: '/authorization' },
-      { label: '공동구매 관리', path: '/groups' },
+      { label: '공동구매 관리', path: '/products' },
       { label: '보안/감사 로그', path: '/security' },
     ],
     SELLER: [
