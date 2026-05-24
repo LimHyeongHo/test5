@@ -19,7 +19,7 @@ const Header = () => {
     ],
     SELLER: [
       { label: '대시보드', path: '/seller/dashboard' },
-      { label: '물품 등록', path: '/seller/register' },
+      { label: '물품 등록', path: '/seller/products' },
       { label: '판매 현황', path: '/seller/status' },
       { label: '분석 데이터', path: '/seller/analytics' },
       { label: '채팅', path: '/chat' },

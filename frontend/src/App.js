@@ -13,6 +13,7 @@ import ProductsManagementPage from './pages/admin/products/ProductsManagementPag
 
 /// [*] 판매자용 페이지 import
 import SellerDashboardPage from './pages/seller/dashboard/SellerDashboardPage';
+import ProductsRegisterPage from './pages/seller/products/ProductsRegisterPage';
 
 function App() {
   return (
@@ -44,6 +45,8 @@ function App() {
         { /* ----------------관리자 페이지-----------------*/}
         { /* 대시보드 페이지 접속 화면 */}
         <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+        { /* 상품관리 페이지 접속 화면 */}
+        <Route path="/seller/products" element={<ProductsRegisterPage />} />
         { /* ---------------------------------------------*/}
 
         {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
