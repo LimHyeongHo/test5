@@ -11,6 +11,9 @@ import UserAuthorization from './pages/admin/authorization/UserAuthorization';
 import AdminDashboardPage from './pages/admin/dashboard/AdminDashboardPage';
 import ProductsManagementPage from './pages/admin/products/ProductsManagementPage';
 
+/// [*] 판매자용 페이지 import
+import SellerDashboardPage from './pages/seller/dashboard/SellerDashboardPage';
+
 function App() {
   return (
     <BrowserRouter>
@@ -29,13 +32,18 @@ function App() {
 
         { /* ----------------관리자 페이지-----------------*/}
         { /* 보안 로그 화면으로 접속했을 때 보여줄 화면 */ }
-        <Route path="/security" element={<SecurityLogPage />} />
+        <Route path="/admin/security" element={<SecurityLogPage />} />
         { /* 회원 관리 페이지 접속 화면 */}
-        <Route path="/authorization" element={<UserAuthorization />} />
+        <Route path="/admin/authorization" element={<UserAuthorization />} />
         { /* 대시보드 페이지 접속 화면 */}
-        <Route path="/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         { /* 상품관리 페이지 접속 화면 */}
-        <Route path="/products" element={<ProductsManagementPage />} />
+        <Route path="/admin/products" element={<ProductsManagementPage />} />
+        { /* ---------------------------------------------*/}
+
+        { /* ----------------관리자 페이지-----------------*/}
+        { /* 대시보드 페이지 접속 화면 */}
+        <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
         { /* ---------------------------------------------*/}
 
         {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
