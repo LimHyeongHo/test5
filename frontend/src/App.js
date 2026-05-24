@@ -8,6 +8,7 @@ import HomePage_v2 from './pages/home/HomePage_v2';
 /// [*] 관리자용 페이지 import
 import SecurityLogPage from './pages/admin/security/SecurityLogPage';
 import UserAuthorization from './pages/admin/authorization/UserAuthorization';
+import AdminDashboardPage from './pages/admin/dashboard/AdminDashboardPage';
 
 function App() {
   return (
@@ -29,6 +30,9 @@ function App() {
 
         { /* 회원 관리 페이지 접속 화면 */}
         <Route path="/authorization" element={<UserAuthorization />} />
+
+        { /* 회원 관리 페이지 접속 화면 */}
+        <Route path="/dashboard" element={<AdminDashboardPage />} />
 
         {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
         {/* <Route path="/book/:id" element={<BookDetail />} /> */} 
