@@ -14,6 +14,7 @@ import ProductsManagementPage from './pages/admin/products/ProductsManagementPag
 /// [*] 판매자용 페이지 import
 import SellerDashboardPage from './pages/seller/dashboard/SellerDashboardPage';
 import ProductsRegisterPage from './pages/seller/products/ProductsRegisterPage';
+import SellerProductsPage from './pages/seller/products/SellerProductsPage';
 
 function App() {
   return (
@@ -29,7 +30,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
 
         {/* 홈 화면으로 접속했을 때 보여줄 화면 */}
-        <Route path="/home" element={<HomePage_v2 />} />
+        <Route path="/" element={<HomePage_v2 />} />
 
         { /* ----------------관리자 페이지-----------------*/}
         { /* 보안 로그 화면으로 접속했을 때 보여줄 화면 */ }
@@ -47,6 +48,8 @@ function App() {
         <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
         { /* 상품관리 페이지 접속 화면 */}
         <Route path="/seller/products" element={<ProductsRegisterPage />} />
+        { /* 상품관리 페이지 접속 화면 */}
+        <Route path="/seller/status" element={<SellerProductsPage />} />
         { /* ---------------------------------------------*/}
 
         {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
