@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Git 추적 제외 및 개인 테스트용 파일 제외(민감 정보 및 개인 설정 보호) 
+**/application-local.properties
