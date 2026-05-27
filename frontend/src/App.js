@@ -15,6 +15,7 @@ import ProductsManagementPage from './pages/admin/products/ProductsManagementPag
 import SellerDashboardPage from './pages/seller/dashboard/SellerDashboardPage';
 import ProductsRegisterPage from './pages/seller/products/ProductsRegisterPage';
 import SellerProductsPage from './pages/seller/products/SellerProductsPage';
+import SellerAnalyticsPage from './pages/seller/analytics/SellerAnalyticsPage';
 
 function App() {
   return (
@@ -43,13 +44,15 @@ function App() {
         <Route path="/admin/products" element={<ProductsManagementPage />} />
         { /* ---------------------------------------------*/}
 
-        { /* ----------------관리자 페이지-----------------*/}
+        { /* ----------------판매자 페이지-----------------*/}
         { /* 대시보드 페이지 접속 화면 */}
         <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
         { /* 상품관리 페이지 접속 화면 */}
         <Route path="/seller/products" element={<ProductsRegisterPage />} />
         { /* 상품관리 페이지 접속 화면 */}
         <Route path="/seller/status" element={<SellerProductsPage />} />
+        { /* 분석데이터 페이지 접속 화면 */}
+        <Route path="/seller/analytics" element={<SellerAnalyticsPage />} />  
         { /* ---------------------------------------------*/}
 
         {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
