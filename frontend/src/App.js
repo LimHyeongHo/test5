@@ -1,24 +1,64 @@
-import logo from './logo.svg';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
+
+import LoginPage from './pages/login/LoginPage';
+import SignupPage from './pages/signup/SignupPage';
+import HomePage_v2 from './pages/home/HomePage_v2';
+/// [*] 관리자용 페이지 import
+import SecurityLogPage from './pages/admin/security/SecurityLogPage';
+import UserAuthorization from './pages/admin/authorization/UserAuthorization';
+import AdminDashboardPage from './pages/admin/dashboard/AdminDashboardPage';
+import ProductsManagementPage from './pages/admin/products/ProductsManagementPage';
+
+/// [*] 판매자용 페이지 import
+import SellerDashboardPage from './pages/seller/dashboard/SellerDashboardPage';
+import ProductsRegisterPage from './pages/seller/products/ProductsRegisterPage';
+import SellerProductsPage from './pages/seller/products/SellerProductsPage';
+import SellerAnalyticsPage from './pages/seller/analytics/SellerAnalyticsPage';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        {/* 메인 주소(localhost:3000/)로 접속했을 때 보여줄 화면 */}
+        {/* <Route path="/" element={<Home />} /> */}
+
+        {/* 로그인 주소(localhost:3000/login)로 접속했을 때 보여줄 화면 */}
+        <Route path="/login" element={<LoginPage />} />
+        
+        {/* ✨ 회원가입 주소 등록 (http://localhost:3000/signup) */}
+        <Route path="/signup" element={<SignupPage />} />
+
+        {/* 홈 화면으로 접속했을 때 보여줄 화면 */}
+        <Route path="/" element={<HomePage_v2 />} />
+
+        { /* ----------------관리자 페이지-----------------*/}
+        { /* 보안 로그 화면으로 접속했을 때 보여줄 화면 */ }
+        <Route path="/admin/security" element={<SecurityLogPage />} />
+        { /* 회원 관리 페이지 접속 화면 */}
+        <Route path="/admin/authorization" element={<UserAuthorization />} />
+        { /* 대시보드 페이지 접속 화면 */}
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        { /* 상품관리 페이지 접속 화면 */}
+        <Route path="/admin/products" element={<ProductsManagementPage />} />
+        { /* ---------------------------------------------*/}
+
+        { /* ----------------판매자 페이지-----------------*/}
+        { /* 대시보드 페이지 접속 화면 */}
+        <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+        { /* 상품관리 페이지 접속 화면 */}
+        <Route path="/seller/products" element={<ProductsRegisterPage />} />
+        { /* 상품관리 페이지 접속 화면 */}
+        <Route path="/seller/status" element={<SellerProductsPage />} />
+        { /* 분석데이터 페이지 접속 화면 */}
+        <Route path="/seller/analytics" element={<SellerAnalyticsPage />} />  
+        { /* ---------------------------------------------*/}
+
+        {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
+        {/* <Route path="/book/:id" element={<BookDetail />} /> */} 
+      </Routes>
+    </BrowserRouter>
   );
 }
 
