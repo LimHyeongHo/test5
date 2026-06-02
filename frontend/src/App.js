@@ -19,6 +19,7 @@ import SellerAnalyticsPage from './pages/seller/analytics/SellerAnalyticsPage';
 
 /// [*] 공용 페이지 import
 import SharedChatPage from './pages/shared/chat/SharedChatPage';
+import SharedMyPage from './pages/shared/mypage/SharedMyPage';
 
 function App() {
   return (
@@ -59,11 +60,13 @@ function App() {
         { /* ---------------------------------------------*/}
 
         { /* ----------------공용 페이지(채팅 등)-----------------*/}
-        { /* 판매자 영역 채팅 페이지 */}
+        { /* 판매자, 구매자 영역 채팅 페이지 */}
         <Route path="/seller/chat" element={<SharedChatPage userRole="SELLER" />} />
-
-        { /* 구매자 영역 채팅 페이지 */}
         <Route path="/buyer/chat" element={<SharedChatPage userRole="BUYER" />} />
+        { /* 관리자, 판매자, 구매자 마이페이지 페이지 */}
+        <Route path="/seller/mypage" element={<SharedMyPage userRole="SELLER" />} />
+        <Route path="/buyer/mypage" element={<SharedMyPage userRole="BUYER" />} />
+        <Route path="/admin/mypage" element={<SharedMyPage userRole="ADMIN" />} />
         { /* ---------------------------------------------*/}
 
         {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
