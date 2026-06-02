@@ -12,24 +12,24 @@ const Header = () => {
   // 1. 역할별 메뉴 구성 데이터를 객체 형태로 깔끔하게 정리 (메모리에 저장!)
   const menuConfigs = {
     ADMIN: [
-      { label: '통합 대시보드', path: '/dashboard' },
-      { label: '회원/권한 관리', path: '/authorization' },
-      { label: '공동구매 관리', path: '/products' },
-      { label: '보안/감사 로그', path: '/security' },
+      { label: '통합 대시보드', path: '/admin/dashboard' },
+      { label: '회원/권한 관리', path: '/admin/authorization' },
+      { label: '공동구매 관리', path: '/admin/products' },
+      { label: '보안/감사 로그', path: '/admin/security' },
     ],
     SELLER: [
       { label: '대시보드', path: '/seller/dashboard' },
       { label: '물품 등록', path: '/seller/products' },
       { label: '판매 현황', path: '/seller/status' },
       { label: '분석 데이터', path: '/seller/analytics' },
-      { label: '채팅', path: '/chat' },
-      { label: '마이페이지', path: '/mypage' },
+      { label: '채팅', path: '/seller/chat' },
+      { label: '마이페이지', path: '/seller/mypage' },
     ],
     BUYER: [
       { label: '게시글 보기', path: '/' },
-      { label: '채팅', path: '/chat' },
-      { label: '찜/스크랩', path: '/bookmarks' },
-      { label: '마이페이지', path: '/mypage' },
+      { label: '채팅', path: '/buyer/chat' },
+      { label: '찜/스크랩', path: '/buyer/bookmarks' },
+      { label: '마이페이지', path: '/buyer/mypage' },
     ]
   };
 

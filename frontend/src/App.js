@@ -17,6 +17,9 @@ import ProductsRegisterPage from './pages/seller/products/ProductsRegisterPage';
 import SellerProductsPage from './pages/seller/products/SellerProductsPage';
 import SellerAnalyticsPage from './pages/seller/analytics/SellerAnalyticsPage';
 
+/// [*] 공용 페이지 import
+import SharedChatPage from './pages/shared/chat/SharedChatPage';
+
 function App() {
   return (
     <BrowserRouter>
@@ -53,6 +56,14 @@ function App() {
         <Route path="/seller/status" element={<SellerProductsPage />} />
         { /* 분석데이터 페이지 접속 화면 */}
         <Route path="/seller/analytics" element={<SellerAnalyticsPage />} />  
+        { /* ---------------------------------------------*/}
+
+        { /* ----------------공용 페이지(채팅 등)-----------------*/}
+        { /* 판매자 영역 채팅 페이지 */}
+        <Route path="/seller/chat" element={<SharedChatPage userRole="SELLER" />} />
+
+        { /* 구매자 영역 채팅 페이지 */}
+        <Route path="/buyer/chat" element={<SharedChatPage userRole="BUYER" />} />
         { /* ---------------------------------------------*/}
 
         {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
