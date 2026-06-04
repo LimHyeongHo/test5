@@ -17,6 +17,9 @@ import ProductsRegisterPage from './pages/seller/products/ProductsRegisterPage';
 import SellerProductsPage from './pages/seller/products/SellerProductsPage';
 import SellerAnalyticsPage from './pages/seller/analytics/SellerAnalyticsPage';
 
+/// [*] 구매자용 페이지 import
+import BuyerProductsPage from './pages/buyer/products/BuyerProductsPage';
+
 /// [*] 공용 페이지 import
 import SharedChatPage from './pages/shared/chat/SharedChatPage';
 import SharedMyPageLayout from './pages/shared/mypage/SharedMyPageLayout';
@@ -30,6 +33,7 @@ import MyPageSettings from './pages/shared/mypage/MyPageSettings';
 /// [*] 판매자 마이페이지 내 세부 페이지 import
 import MyPageProjects from './pages/shared/mypage/MyPageProjects';
 import MyPageSettlement from './pages/shared/mypage/MyPageSettlement';
+
 function App() {
   return (
     <BrowserRouter>
@@ -66,6 +70,11 @@ function App() {
         <Route path="/seller/status" element={<SellerProductsPage />} />
         { /* 분석데이터 페이지 접속 화면 */}
         <Route path="/seller/analytics" element={<SellerAnalyticsPage />} />  
+        { /* ---------------------------------------------*/}
+
+        { /* ----------------구매자 페이지-----------------*/}
+        { /* 대시보드 페이지 접속 화면 */}
+        <Route path="/buyer/products" element={<BuyerProductsPage />} />
         { /* ---------------------------------------------*/}
 
         { /* ----------------공용 페이지(채팅 등)-----------------*/}
