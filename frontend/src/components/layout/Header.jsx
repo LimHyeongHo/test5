@@ -7,7 +7,7 @@ const Header = () => {
 
   // 🚨 [임시 설정] 테스트를 위해 'ADMIN', 'SELLER', 'BUYER' 중 하나로 바꿔보며 확인하세요!
   // 나중에 백엔드 로그인 정보(AuthContext 등)가 들어오면 이 부분이 자동으로 연동됩니다.
-  const userRole = 'BUYER';
+  const userRole = 'SELLER';
 
   // 1. 역할별 메뉴 구성 데이터를 객체 형태로 깔끔하게 정리 (메모리에 저장!)
   const menuConfigs = {

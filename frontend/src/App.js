@@ -21,10 +21,15 @@ import SellerAnalyticsPage from './pages/seller/analytics/SellerAnalyticsPage';
 import SharedChatPage from './pages/shared/chat/SharedChatPage';
 import SharedMyPageLayout from './pages/shared/mypage/SharedMyPageLayout';
 import MyPageOverview from './pages/shared/mypage/MyPageOverview';
+
+/// [*] 구매자 마이페이지 내 세부 페이지 import
 import MyPageOrder from './pages/shared/mypage/MyPageOrder';
 import MyPageScrap from './pages/shared/mypage/MyPageScrap';
 import MyPageSettings from './pages/shared/mypage/MyPageSettings';
 
+/// [*] 판매자 마이페이지 내 세부 페이지 import
+import MyPageProjects from './pages/shared/mypage/MyPageProjects';
+import MyPageSettlement from './pages/shared/mypage/MyPageSettlement';
 function App() {
   return (
     <BrowserRouter>
@@ -79,9 +84,9 @@ function App() {
         {/* ---------------- 판매자 마이페이지 ---------------- */}
         <Route path="/seller/mypage" element={<SharedMyPageLayout userRole="SELLER" />}>
           <Route path="overview" element={<MyPageOverview userRole="SELLER" />} />
-          <Route path="projects" element={<div>개설한 공구 관리 화면</div>} />
-          <Route path="settlement" element={<div>정산 화면</div>} />
-          <Route path="settings" element={<div>설정 화면</div>} />
+          <Route path="projects" element={<MyPageProjects userRole="SELLER" />} />
+          <Route path="settlement" element={<MyPageSettlement userRole="SELLER" />} />
+          <Route path="settings" element={<MyPageSettings userRole="SELLER" />} />
         </Route>
         { /* ---------------------------------------------*/}
 
