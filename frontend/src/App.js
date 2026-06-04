@@ -19,7 +19,8 @@ import SellerAnalyticsPage from './pages/seller/analytics/SellerAnalyticsPage';
 
 /// [*] 공용 페이지 import
 import SharedChatPage from './pages/shared/chat/SharedChatPage';
-import SharedMyPage from './pages/shared/mypage/SharedMyPage';
+import SharedMyPageLayout from './pages/shared/mypage/SharedMyPageLayout';
+import MyPageOverview from './pages/shared/mypage/MyPageOverview';
 
 function App() {
   return (
@@ -63,14 +64,26 @@ function App() {
         { /* 판매자, 구매자 영역 채팅 페이지 */}
         <Route path="/seller/chat" element={<SharedChatPage userRole="SELLER" />} />
         <Route path="/buyer/chat" element={<SharedChatPage userRole="BUYER" />} />
-        { /* 관리자, 판매자, 구매자 마이페이지 페이지 */}
-        <Route path="/seller/mypage" element={<SharedMyPage userRole="SELLER" />} />
-        <Route path="/buyer/mypage" element={<SharedMyPage userRole="BUYER" />} />
-        <Route path="/admin/mypage" element={<SharedMyPage userRole="ADMIN" />} />
+        
+        {/* ---------------- 구매자 마이페이지 ---------------- */}
+        <Route path="/buyer/mypage" element={<SharedMyPageLayout userRole="BUYER" />}>
+          {/* 기본 접속 시 개요 화면으로 연결 (Index Route 역할을 위해 Navigate 사용 권장) */}
+          <Route path="overview" element={<MyPageOverview userRole="BUYER" />} />
+          <Route path="orders" element={<div>참여 중인 공동구매 화면</div>} />
+          <Route path="scrap" element={<div>스크랩 화면</div>} />
+          <Route path="settings" element={<div>설정 화면</div>} />
+        </Route>
+        {/* ---------------- 판매자 마이페이지 ---------------- */}
+        <Route path="/seller/mypage" element={<SharedMyPageLayout userRole="SELLER" />}>
+          <Route path="overview" element={<MyPageOverview userRole="SELLER" />} />
+          <Route path="projects" element={<div>개설한 공구 관리 화면</div>} />
+          <Route path="settlement" element={<div>정산 화면</div>} />
+          <Route path="settings" element={<div>설정 화면</div>} />
+        </Route>
         { /* ---------------------------------------------*/}
 
-        {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
-        {/* <Route path="/book/:id" element={<BookDetail />} /> */} 
+                {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
+                {/* <Route path="/book/:id" element={<BookDetail />} /> */} 
       </Routes>
     </BrowserRouter>
   );
