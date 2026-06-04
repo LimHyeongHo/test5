@@ -4,7 +4,6 @@ import { User, ShoppingBag, Bookmark, Settings, Store, CreditCard, ChevronRight 
 import Header from '../../../components/layout/Header';
 
 const SharedMyPageLayout = ({ userRole = 'BUYER' }) => {
-  // 현재 접속한 주소의 앞부분을 파악하여 링크를 동적으로 생성합니다.
   const basePath = userRole === 'SELLER' ? '/seller/mypage' : '/buyer/mypage';
 
   const buyerMenuItems = [
@@ -24,29 +23,33 @@ const SharedMyPageLayout = ({ userRole = 'BUYER' }) => {
   const menuItems = userRole === 'SELLER' ? sellerMenuItems : buyerMenuItems;
   const location = useLocation();
 
-  // 현재 활성화된 탭의 이름을 찾아서 메인 타이틀로 띄워줍니다.
-  const activeMenu = menuItems.find(item => location.pathname.includes(item.path));
+  // 현재 활성화된 탭 확인 (기본값으로 '회원 정보 개요'를 잡도록 안전장치 추가)
+  const activeMenu = menuItems.find(item => location.pathname.includes(item.path)) || menuItems[0];
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
       <Header />
 
-      <div className="bg-white border-b border-gray-200 py-8 px-6">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
-          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">마이페이지</h2>
-          <span className="text-sm font-bold text-gray-400 mt-2">
-            {userRole === 'SELLER' ? '판매자 계정 관리' : '구매자 계정 관리'}
-          </span>
-        </div>
-      </div>
+      {/* 🚨 기존에 있던 상단 배너 영역 완전 삭제됨 */}
 
-      <main className="flex-grow max-w-7xl w-full mx-auto p-6 md:p-8 flex flex-col md:flex-row gap-8">
-        {/* 좌측 사이드바 (NavLinks) */}
+      {/* 메인 영역: mt-8 (위쪽 여백)을 살짝 주어 헤더와 떨어지게 만듭니다. */}
+      <main className="flex-grow max-w-7xl w-full mx-auto p-6 md:p-8 flex flex-col md:flex-row gap-8 mt-4">
+        
+        {/* 좌측 사이드바 */}
         <aside className="w-full md:w-64 flex-shrink-0 flex flex-col gap-2">
+          
+          {/* 배너 대신 사이드바 상단에 소속(타이틀)을 알려주는 영역 추가 */}
+          <div className="px-4 pb-4 mb-2 border-b border-gray-200">
+            <h2 className="text-xl font-extrabold text-gray-900">마이페이지</h2>
+            <span className="text-xs font-bold text-gray-400">
+              {userRole === 'SELLER' ? '판매자 계정 관리' : '구매자 계정 관리'}
+            </span>
+          </div>
+
           {menuItems.map((item) => (
             <NavLink
               key={item.path}
-              to={`${basePath}/${item.path}`} // 예: /buyer/mypage/overview
+              to={`${basePath}/${item.path}`}
               className={({ isActive }) => `flex items-center justify-between w-full p-4 rounded-2xl font-bold transition-all duration-200 ${
                 isActive 
                   ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100/50' 
@@ -66,21 +69,17 @@ const SharedMyPageLayout = ({ userRole = 'BUYER' }) => {
           ))}
         </aside>
 
-        {/* 우측 메인 콘텐츠 (Outlet이 뚫려있는 영역) */}
+        {/* 우측 메인 콘텐츠 */}
         <section className="flex-grow flex flex-col gap-6">
           <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">
             {activeMenu?.label}
           </h3>
-          
-          {/* 자식 컴포넌트들이 이곳에 주입됩니다! */}
           <Outlet /> 
-          
         </section>
       </main>
 
-      {/* 푸터 영역 (기존과 동일하므로 생략) */}
       <footer className="bg-white border-t border-gray-200 py-10 mt-auto">
-        {/* 푸터 내용 */}
+        {/* 푸터 내용 유지 */}
       </footer>
     </div>
   );

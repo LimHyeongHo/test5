@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 import LoginPage from './pages/login/LoginPage';
@@ -75,7 +75,7 @@ function App() {
         
         {/* ---------------- 구매자 마이페이지 ---------------- */}
         <Route path="/buyer/mypage" element={<SharedMyPageLayout userRole="BUYER" />}>
-          {/* 기본 접속 시 개요 화면으로 연결 (Index Route 역할을 위해 Navigate 사용 권장) */}
+           <Route index element={<Navigate to="overview" replace />} />
           <Route path="overview" element={<MyPageOverview userRole="BUYER" />} />
           <Route path="orders" element={<MyPageOrder userRole="BUYER" />} />
           <Route path="scrap" element={<MyPageScrap userRole="BUYER" />} />
@@ -83,6 +83,7 @@ function App() {
         </Route>
         {/* ---------------- 판매자 마이페이지 ---------------- */}
         <Route path="/seller/mypage" element={<SharedMyPageLayout userRole="SELLER" />}>
+        <Route index element={<Navigate to="overview" replace />} />
           <Route path="overview" element={<MyPageOverview userRole="SELLER" />} />
           <Route path="projects" element={<MyPageProjects userRole="SELLER" />} />
           <Route path="settlement" element={<MyPageSettlement userRole="SELLER" />} />
