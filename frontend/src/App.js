@@ -21,6 +21,9 @@ import SellerAnalyticsPage from './pages/seller/analytics/SellerAnalyticsPage';
 import SharedChatPage from './pages/shared/chat/SharedChatPage';
 import SharedMyPageLayout from './pages/shared/mypage/SharedMyPageLayout';
 import MyPageOverview from './pages/shared/mypage/MyPageOverview';
+import MyPageOrder from './pages/shared/mypage/MyPageOrder';
+import MyPageScrap from './pages/shared/mypage/MyPageScrap';
+import MyPageSettings from './pages/shared/mypage/MyPageSettings';
 
 function App() {
   return (
@@ -69,9 +72,9 @@ function App() {
         <Route path="/buyer/mypage" element={<SharedMyPageLayout userRole="BUYER" />}>
           {/* 기본 접속 시 개요 화면으로 연결 (Index Route 역할을 위해 Navigate 사용 권장) */}
           <Route path="overview" element={<MyPageOverview userRole="BUYER" />} />
-          <Route path="orders" element={<div>참여 중인 공동구매 화면</div>} />
-          <Route path="scrap" element={<div>스크랩 화면</div>} />
-          <Route path="settings" element={<div>설정 화면</div>} />
+          <Route path="orders" element={<MyPageOrder userRole="BUYER" />} />
+          <Route path="scrap" element={<MyPageScrap userRole="BUYER" />} />
+          <Route path="settings" element={<MyPageSettings userRole="BUYER" />} />
         </Route>
         {/* ---------------- 판매자 마이페이지 ---------------- */}
         <Route path="/seller/mypage" element={<SharedMyPageLayout userRole="SELLER" />}>
