@@ -20,7 +20,7 @@ const BuyerProductsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900 font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
       <Header />
 
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 py-16 px-6">
