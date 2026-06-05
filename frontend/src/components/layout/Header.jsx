@@ -3,34 +3,32 @@ import { Link } from 'react-router-dom';
 import { User, ShieldAlert } from 'lucide-react';
 
 const Header = () => {
-  // 🛠️ [테스트용 수동 스위치] 초기값을 'BUYER', 'SELLER', 'ADMIN' 중 하나로 적어주세요!
-  const [userRole, setUserRole] = useState('BUYER');
+  const [userRole, setUserRole] = useState('BUYER'); // BUYER, SELLER, ADMIN 중 하나
 
-  // 화면에서 배지를 클릭하면 즉시 다른 모드로 바뀌는 마법의(?) 테스트 함수입니다.
   const handleRoleToggle = (e) => {
-    e.preventDefault(); // 클릭 시 페이지 이동 방지
+    e.preventDefault();
     if (userRole === 'BUYER') setUserRole('SELLER');
     else if (userRole === 'SELLER') setUserRole('ADMIN');
     else setUserRole('BUYER');
   };
 
-  // 권한에 따른 마이페이지 이동 경로 (ADMIN은 마이페이지 대신 관리자 대시보드로 이동)
   const myPagePath = userRole === 'SELLER' ? '/seller/mypage' : userRole === 'ADMIN' ? '/admin/dashboard' : '/buyer/mypage';
 
   return (
-    <header className="bg-white border-b border-gray-200 h-16 px-6 flex items-center justify-between sticky top-0 z-50">
+    // 전체 배경은 화면 끝까지 채우고, 양끝 정렬(justify-between)을 유지합니다.
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 w-full h-16 flex items-center justify-between">
       
-      {/* 1. 좌측 영역: 로고 */}
-      <Link to="/" className="text-xl font-black tracking-tight text-gray-900 hover:text-blue-600 transition shrink-0">
-        YU-BOOK
-      </Link>
+      {/* 1. 좌측 로고 영역: 화면이 1280px(7xl)을 넘어가면 자동으로 본문 시작 선에 맞춰 안으로 밀려 들어옵니다. */}
+      <div className="flex items-center shrink-0 pl-[max(1.5rem,calc(50vw-40rem+1.5rem))] md:pl-[max(2rem,calc(50vw-40rem+2rem))]">
+        <Link to="/" className="text-xl font-black tracking-tight text-gray-900 hover:text-blue-600 transition">
+          YU-BOOK
+        </Link>
+      </div>
 
-      {/* 2 & 3. 우측 영역: 네비게이션 메뉴 + 유저 프로필 */}
-      <div className="flex items-center gap-8">
+      {/* 2 & 3. 우측 영역: 화면 너비와 상관없이 항상 우측 끝에 시원하게 고정됩니다. */}
+      <div className="flex items-center gap-8 pr-6 md:pr-8">
         
-        {/* 네비게이션 메뉴 (권한별 분기) */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-bold text-gray-500">
-          
           {userRole === 'ADMIN' && (
             <>
               <Link to="/admin/dashboard" className="hover:text-red-600 transition">관리자 홈</Link>
@@ -53,17 +51,14 @@ const Header = () => {
           {userRole === 'BUYER' && (
             <>
               <Link to="/" className="hover:text-gray-950 transition">홈</Link>
-              {/* 공구 찾기는 나중에 만드실 경로를 상상해서 임시로 넣었습니다 */}
               <Link to="/buyer/products" className="hover:text-gray-950 transition">공구 찾기</Link> 
               <Link to="/buyer/chat" className="hover:text-gray-950 transition">채팅</Link>
             </>
           )}
         </nav>
 
-        {/* 얇은 구분선 */}
         <div className="hidden md:block w-px h-4 bg-gray-200"></div>
 
-        {/* 유저 프로필 영역 */}
         <Link 
           to={myPagePath} 
           className="flex items-center gap-3 hover:bg-gray-50 px-3 py-1.5 rounded-2xl transition cursor-pointer group shrink-0"
@@ -72,8 +67,6 @@ const Header = () => {
             <span className="text-sm font-extrabold text-gray-900 group-hover:text-blue-600 transition">
               {userRole === 'ADMIN' ? '최고 관리자' : '임형호 님'}
             </span>
-            
-            {/* 👇 여기를 클릭하면 화면 상에서 모드가 즉시 바뀝니다! (테스트용) */}
             <span 
               onClick={handleRoleToggle}
               className={`text-[10px] font-black tracking-wider uppercase cursor-pointer hover:opacity-70 transition ${
@@ -91,7 +84,6 @@ const Header = () => {
         </Link>
         
       </div>
-      
     </header>
   );
 };
