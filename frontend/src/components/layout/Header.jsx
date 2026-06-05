@@ -1,87 +1,89 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { UserCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { User, ShieldAlert } from 'lucide-react';
 
 const Header = () => {
-  const location = useLocation();
+  const [userRole, setUserRole] = useState('BUYER'); // BUYER, SELLER, ADMIN 중 하나
 
-  // 🚨 [임시 설정] 테스트를 위해 'ADMIN', 'SELLER', 'BUYER' 중 하나로 바꿔보며 확인하세요!
-  // 나중에 백엔드 로그인 정보(AuthContext 등)가 들어오면 이 부분이 자동으로 연동됩니다.
-  const userRole = 'SELLER';
-
-  // 1. 역할별 메뉴 구성 데이터를 객체 형태로 깔끔하게 정리 (메모리에 저장!)
-  const menuConfigs = {
-    ADMIN: [
-      { label: '통합 대시보드', path: '/dashboard' },
-      { label: '회원/권한 관리', path: '/authorization' },
-      { label: '공동구매 관리', path: '/products' },
-      { label: '보안/감사 로그', path: '/security' },
-    ],
-    SELLER: [
-      { label: '대시보드', path: '/seller/dashboard' },
-      { label: '물품 등록', path: '/seller/products' },
-      { label: '판매 현황', path: '/seller/status' },
-      { label: '분석 데이터', path: '/seller/analytics' },
-      { label: '채팅', path: '/chat' },
-      { label: '마이페이지', path: '/mypage' },
-    ],
-    BUYER: [
-      { label: '게시글 보기', path: '/' },
-      { label: '채팅', path: '/chat' },
-      { label: '찜/스크랩', path: '/bookmarks' },
-      { label: '마이페이지', path: '/mypage' },
-    ]
+  const handleRoleToggle = (e) => {
+    e.preventDefault();
+    if (userRole === 'BUYER') setUserRole('SELLER');
+    else if (userRole === 'SELLER') setUserRole('ADMIN');
+    else setUserRole('BUYER');
   };
 
-  // 2. 현재 로그인 페이지나 회원가입 페이지인지 확인
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
-
-  // 3. 현재 역할에 맞는 메뉴 리스트 가져오기 (없으면 빈 배열)
-  const currentMenus = menuConfigs[userRole] || [];
+  const myPagePath = userRole === 'SELLER' ? '/seller/mypage' : userRole === 'ADMIN' ? '/admin/dashboard' : '/buyer/mypage';
 
   return (
-    <header className="flex justify-between items-center px-8 py-5 bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    // 전체 배경은 화면 끝까지 채우고, 양끝 정렬(justify-between)을 유지합니다.
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 w-full h-16 flex items-center justify-between">
       
-      {/* 좌측 로고 */}
-      <div className="font-black text-2xl tracking-tighter text-gray-900 shrink-0">
-        <Link to="/">YU-BOOK</Link>
+      {/* 1. 좌측 로고 영역: 화면이 1280px(7xl)을 넘어가면 자동으로 본문 시작 선에 맞춰 안으로 밀려 들어옵니다. */}
+      <div className="flex items-center shrink-0 pl-[max(1.5rem,calc(50vw-40rem+1.5rem))] md:pl-[max(2rem,calc(50vw-40rem+2rem))]">
+        <Link to="/" className="text-xl font-black tracking-tight text-gray-900 hover:text-blue-600 transition">
+          YU-BOOK
+        </Link>
       </div>
-      
-      {/* 중앙 메뉴 영역 (로그인/회원가입이 아닐 때만 노출) */}
-      {!isAuthPage && (
-        <nav className="flex items-center gap-10">
-          <ul className="flex gap-8 text-sm font-semibold text-gray-600">
-            {currentMenus.map((menu, index) => (
-              <li key={index}>
-                <Link 
-                  to={menu.path} 
-                  className={`transition-colors duration-200 py-1 ${
-                    location.pathname === menu.path 
-                    ? 'text-blue-600 border-b-2 border-blue-600' 
-                    : 'hover:text-blue-600'
-                  }`}
-                >
-                  {menu.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          
-          {/* 우측 사용자 프로필 (중복 요소) */}
-          <div className="flex items-center gap-2 text-gray-700 pl-6 border-l border-gray-200 ml-2">
-            <div className="flex flex-col items-end mr-1">
-              <span className="font-bold text-sm">임형호 님</span>
-              <span className="text-[10px] text-blue-600 font-extrabold uppercase tracking-tight">
-                {userRole} MODE
-              </span>
-            </div>
-            <UserCircle size={32} className="text-gray-300" />
-          </div>
-        </nav>
-      )}
 
-      {/* 로그인/회원가입 페이지일 때는 오른쪽을 비워두어 로고를 강조합니다 */}
-      {isAuthPage && <div className="w-[100px]"></div>}
+      {/* 2 & 3. 우측 영역: 화면 너비와 상관없이 항상 우측 끝에 시원하게 고정됩니다. */}
+      <div className="flex items-center gap-8 pr-6 md:pr-8">
+        
+        <nav className="hidden md:flex items-center gap-6 text-sm font-bold text-gray-500">
+          {userRole === 'ADMIN' && (
+            <>
+              <Link to="/admin/dashboard" className="hover:text-red-600 transition">관리자 홈</Link>
+              <Link to="/admin/authorization" className="hover:text-red-600 transition">회원 관리</Link>
+              <Link to="/admin/products" className="hover:text-red-600 transition">상품 관리</Link>
+              <Link to="/admin/security" className="hover:text-red-600 transition">보안 로그</Link>
+            </>
+          )}
+
+          {userRole === 'SELLER' && (
+            <>
+              <Link to="/seller/dashboard" className="hover:text-gray-950 transition">대시보드</Link>
+              <Link to="/seller/products" className="hover:text-gray-950 transition">물품 등록</Link>
+              <Link to="/seller/status" className="hover:text-gray-950 transition">판매 현황</Link>
+              <Link to="/seller/analytics" className="hover:text-gray-950 transition">분석 데이터</Link>
+              <Link to="/seller/chat" className="hover:text-gray-950 transition">채팅</Link>
+            </>
+          )}
+
+          {userRole === 'BUYER' && (
+            <>
+              <Link to="/" className="hover:text-gray-950 transition">홈</Link>
+              <Link to="/buyer/products" className="hover:text-gray-950 transition">공구 찾기</Link> 
+              <Link to="/buyer/chat" className="hover:text-gray-950 transition">채팅</Link>
+            </>
+          )}
+        </nav>
+
+        <div className="hidden md:block w-px h-4 bg-gray-200"></div>
+
+        <Link 
+          to={myPagePath} 
+          className="flex items-center gap-3 hover:bg-gray-50 px-3 py-1.5 rounded-2xl transition cursor-pointer group shrink-0"
+        >
+          <div className="flex flex-col text-right">
+            <span className="text-sm font-extrabold text-gray-900 group-hover:text-blue-600 transition">
+              {userRole === 'ADMIN' ? '최고 관리자' : '임형호 님'}
+            </span>
+            <span 
+              onClick={handleRoleToggle}
+              className={`text-[10px] font-black tracking-wider uppercase cursor-pointer hover:opacity-70 transition ${
+                userRole === 'ADMIN' ? 'text-red-600' : userRole === 'SELLER' ? 'text-emerald-600' : 'text-blue-600'
+              }`}
+              title="클릭하여 모드 변경 (테스트용)"
+            >
+              {userRole} MODE
+            </span>
+          </div>
+          
+          <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 group-hover:border-blue-300 transition shadow-inner overflow-hidden">
+            {userRole === 'ADMIN' ? <ShieldAlert size={18} className="text-red-500" /> : <User size={18} className="group-hover:text-blue-500" />}
+          </div>
+        </Link>
+        
+      </div>
     </header>
   );
 };
