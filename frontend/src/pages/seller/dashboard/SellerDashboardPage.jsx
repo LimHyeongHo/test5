@@ -40,7 +40,7 @@ const SellerDashboardPage = () => {
         {/* 상단 3종 요약 통계 카드 */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* 카드 1: 진행 중인 공동구매 */}
-          <div className="bg-white rounded-[24px] p-6 border border-gray-200 shadow-sm flex justify-between items-center transition hover:shadow-md">
+          <Link to="/seller/status" className="bg-white rounded-[24px] p-6 border border-gray-200 shadow-sm flex justify-between items-center transition hover:shadow-md">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">진행 중인 공동구매</span>
               <h3 className="text-3xl font-black text-gray-950 mt-1">3 건</h3>
@@ -51,10 +51,10 @@ const SellerDashboardPage = () => {
             <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
               <BookOpen size={24} />
             </div>
-          </div>
+          </Link>
 
           {/* 카드 2: 누적 판매 예상 수익 */}
-          <div className="bg-white rounded-[24px] p-6 border border-gray-200 shadow-sm flex justify-between items-center transition hover:shadow-md">
+          <Link to="/seller/analytics" className="bg-white rounded-[24px] p-6 border border-gray-200 shadow-sm flex justify-between items-center transition hover:shadow-md">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">누적 판매 (예상 수익)</span>
               <h3 className="text-3xl font-black text-gray-950 mt-1">₩490,000</h3>
@@ -65,10 +65,10 @@ const SellerDashboardPage = () => {
             <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Store size={24} />
             </div>
-          </div>
+          </Link>
 
           {/* 카드 3: 신규 문의 내역 */}
-          <div className="bg-white rounded-[24px] p-6 border border-gray-200 shadow-sm flex justify-between items-center transition hover:shadow-md">
+          <Link to="/seller/chat" className="bg-white rounded-[24px] p-6 border border-gray-200 shadow-sm flex justify-between items-center transition hover:shadow-md">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">신규 채팅/문의</span>
               <h3 className="text-3xl font-black text-gray-950 mt-1">12 건</h3>
@@ -79,7 +79,7 @@ const SellerDashboardPage = () => {
             <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
               <MessageSquare size={24} />
             </div>
-          </div>
+          </Link>
         </section>
 
         {/* 하단 스플릿 레이아웃 (2/3 게시글 관리 + 1/3 빠른 알림) */}
@@ -92,9 +92,9 @@ const SellerDashboardPage = () => {
                 <h3 className="text-xl font-extrabold text-gray-950 tracking-tight">내 판매 현황</h3>
                 <p className="text-xs text-gray-400 mt-1">진행 중인 공동구매의 목표 달성률을 확인하세요.</p>
               </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition shadow-md shadow-slate-200">
+              <Link to="/seller/products" className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition shadow-md shadow-slate-200">
                 <PlusCircle size={16} /> 새 물품 등록
-              </button>
+              </Link>
             </div>
 
             <div className="flex flex-col gap-4">

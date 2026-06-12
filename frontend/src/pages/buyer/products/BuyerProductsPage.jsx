@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 // 🛠️ LayoutGrid, List 아이콘이 추가되었습니다.
 import { Search, SlidersHorizontal, BookOpen, Users, ChevronDown, Filter, Clock, Image as ImageIcon, LayoutGrid, List } from 'lucide-react';
 import Header from '../../../components/layout/Header';
@@ -138,8 +139,9 @@ const BuyerProductsPage = () => {
           {/* 🌟 선택된 뷰 모드에 따라 레이아웃 동적 변경 */}
           <div className={viewMode === 'GRID' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "flex flex-col gap-4"}>
             {productList.map((item) => (
-              <div 
+              <Link 
                 key={item.id} 
+                to={`/buyer/products/${item.id}`}
                 className={`bg-white rounded-[24px] border border-gray-200 shadow-sm flex hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group overflow-hidden ${
                   viewMode === 'GRID' ? 'flex-col' : 'flex-row items-stretch'
                 }`}
@@ -205,7 +207,7 @@ const BuyerProductsPage = () => {
                   </div>
 
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           
