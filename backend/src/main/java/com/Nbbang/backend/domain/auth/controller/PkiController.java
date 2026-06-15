@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -191,7 +193,7 @@ public class PkiController {
     }
 
     @PostMapping("/login/verify")
-    public ResponseEntity<Map<String, Object>> verify(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> verify(@RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
         String deviceId = request.get("deviceId") != null ? request.get("deviceId").replaceAll("\\s", "") : "";
         String password = request.get("password");
         String signature = request.get("signature");
@@ -219,6 +221,11 @@ public class PkiController {
 
             Map<String, Object> response = new HashMap<>();
             if (isValid) {
+                HttpSession session = httpRequest.getSession(true);
+                session.setAttribute("userId", user.getEmail());
+                session.setAttribute("nickname", user.getNickname());
+                session.setAttribute("role", user.getRole());
+
                 response.put("success", true);
                 response.put("nickname", user.getNickname());
                 response.put("role", user.getRole());
