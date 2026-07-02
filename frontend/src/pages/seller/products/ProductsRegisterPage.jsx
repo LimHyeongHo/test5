@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, PlusCircle, BookOpen, Package, DollarSign, Users, FileText, Upload, AlertCircle } from 'lucide-react';
+import { Store, PlusCircle, BookOpen, Package, DollarSign, Users, FileText, Upload, AlertCircle, X } from 'lucide-react';
 import Header from '../../../components/layout/Header';
 
 const ProductRegisterPage = () => {
@@ -18,7 +18,23 @@ const ProductRegisterPage = () => {
     targetCount: '',
     description: '',
   });
+  // 2-1. 이미지 업로드용 함수
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file)); 
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
+  
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
@@ -47,9 +63,15 @@ const ProductRegisterPage = () => {
       return;
     }
     
-    // 서버 전송 시 데이터 유형(productType)도 함께 보냅니다.
-    const submitData = { ...formData, type: productType };
-    console.log("서버로 전송할 물품 등록 데이터:", submitData);
+    // 🌟 이미지가 포함된 데이터를 보낼 때는 FormData를 사용합니다
+    const submitData = new FormData();
+    submitData.append('type', productType);
+    submitData.append('title', formData.title);
+    submitData.append('price', formData.price);
+    // ... 나머지 데이터들 append
+    if (imageFile) {
+      submitData.append('image', imageFile); // 파일 객체 담기
+    }
     
     alert(`${productType === 'BOOK' ? '도서' : '학과 물품'} 공동구매 등록이 완료되었습니다!`);
     navigate('/seller/dashboard');
@@ -194,15 +216,37 @@ const ProductRegisterPage = () => {
               <label className="text-sm font-bold text-gray-700">
                 {productType === 'BOOK' ? '도서 실물 이미지 등록' : '물품 실물 이미지 등록'} (최대 1장)
               </label>
-              <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 bg-gray-50 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100/70 transition">
-                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-400">
-                  <Upload size={18} />
+              {/* 🌟 수정된 부분: 미리보기가 있으면 이미지를, 없으면 업로드 박스를 보여줍니다 */}
+              {imagePreview ? (
+                <div className="relative w-full sm:w-1/2 md:w-1/3 aspect-[4/3] rounded-2xl overflow-hidden border border-gray-200 group">
+                  <img src={imagePreview} alt="미리보기" className="w-full h-full object-cover" />
+                  <button 
+                    type="button" 
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 bg-white/90 text-red-500 p-1.5 rounded-full shadow-md hover:bg-red-50 hover:text-red-600 transition"
+                  >
+                    <X size={16} strokeWidth={3} />
+                  </button>
                 </div>
-                <span className="text-xs font-bold text-gray-700 mt-1">
-                  {productType === 'BOOK' ? '클릭하여 전공책 앞표지 업로드' : '클릭하여 물품의 전체 형태가 보이는 사진 업로드'}
-                </span>
-                <span className="text-[10px] text-gray-400">PNG, JPG 파일 지원 (최대 5MB)</span>
-              </div>
+              ) : (
+                <label className="border-2 border-dashed border-gray-200 rounded-2xl p-6 bg-gray-50 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100/70 transition group">
+                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-400 group-hover:text-blue-500 transition">
+                    <Upload size={18} />
+                  </div>
+                  <span className="text-xs font-bold text-gray-700 mt-1 group-hover:text-blue-600 transition">
+                    {productType === 'BOOK' ? '클릭하여 전공책 앞표지 업로드' : '클릭하여 물품의 전체 형태가 보이는 사진 업로드'}
+                  </span>
+                  <span className="text-[10px] text-gray-400">PNG, JPG 파일 지원 (최대 5MB)</span>
+                  
+                  {/* 클릭 이벤트를 받아줄 숨겨진 input 태그 */}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageChange} 
+                    className="hidden" 
+                  />
+                </label>
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -210,7 +254,7 @@ const ProductRegisterPage = () => {
               <textarea 
                 id="description" required rows={5}
                 value={formData.description} onChange={handleChange}
-                placeholder={productType === 'BOOK' ? "책의 상태, 필기 범위, 학과 내 수업 연계 정보 등을 상세히 기재해 주세요." : "물품의 실측 사이즈, 구성품 누락 여부, 사용 기한 등을 상세히 기재해 주세요."}
+                placeholder={productType === 'BOOK' ? "학과 내 수업 연계 정보 등을 상세히 기재해 주세요." : "물품의 실측 사이즈 등을 상세히 기재해 주세요."}
                 className="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition text-base font-medium resize-none leading-relaxed"
               ></textarea>
             </div>

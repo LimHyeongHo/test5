@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Flame, TrendingUp, Clock, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 
 const HomePage = () => {
@@ -43,10 +44,10 @@ const HomePage = () => {
             placeholder="이번 학기 필요한 전공책, 저자, 출판사를 검색해보세요!" 
             className="flex-grow pl-3 md:pl-4 pr-4 py-3 md:py-4 bg-transparent border-none text-sm md:text-base font-semibold outline-none w-full text-gray-900 placeholder-gray-400"
           />
-          <button className="px-6 md:px-10 py-3 md:py-4 bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base font-bold rounded-xl md:rounded-[18px] transition whitespace-nowrap">
+          <Link to="/buyer/products" className="px-6 md:px-10 py-3 md:py-4 bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base font-bold rounded-xl md:rounded-[18px] transition whitespace-nowrap">
             검색
-          </button>
-        </div>
+          </Link>
+        </div> 
         
         {/* 🔥 섹션 1: 마감 임박 큐레이션 */}
         <section className="flex flex-col gap-6 mt-4">
@@ -57,7 +58,7 @@ const HomePage = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {productList.map((item) => (
-              <div key={item.id} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
+              <Link key={item.id} to={`/buyer/products/${item.id}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
                 <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
                   <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <span className="absolute top-3 left-3 text-[11px] font-black px-2.5 py-1 rounded-md shadow-sm z-10 bg-red-500 text-white">
@@ -88,7 +89,7 @@ const HomePage = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

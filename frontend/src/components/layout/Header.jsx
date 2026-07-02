@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { User, ShieldAlert } from 'lucide-react';
 
 const Header = () => {
-  const [userRole, setUserRole] = useState('BUYER'); // BUYER, SELLER, ADMIN 중 하나
+  const [userRole, setUserRole] = useState('SELLER'); // BUYER, SELLER, ADMIN 중 하나
 
   const handleRoleToggle = (e) => {
     e.preventDefault();
