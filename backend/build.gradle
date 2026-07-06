@@ -52,6 +52,8 @@ dependencies {
 
 	// Database (MySQL)
 	runtimeOnly 'com.mysql:mysql-connector-j'
+	// [+] Supabase 의존성 추가
+	runtimeOnly 'org.postgresql:postgresql'
 
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
