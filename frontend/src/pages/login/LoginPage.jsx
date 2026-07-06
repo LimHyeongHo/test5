@@ -1,24 +1,229 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 /// [*] 회원가입 페이지와 연결
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 /// [*] 헤더 컴포넌트 연결
 import Header from '../../components/layout/Header';
 
-// 피그마 디자인의 배경 이미지가 필요합니다.
-// 이미지를 src/assets 폴더에 넣고 import하거나, 
-// 여기서는 임시로 플레이스홀더 URL을 사용합니다.
-const backgroundImgUrl = "https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=2600"; 
+const backgroundImgUrl = "https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=2600";
+
+const DB_NAME = "PKI_KeyStore";
+const STORE_NAME = "privateKeys";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState('user'); // 'user' | 'admin'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
+  const [regCi, setRegCi] = useState(null);
+  const [privateKey, setPrivateKey] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    if (!email || !password) return alert("이메일과 비밀번호를 입력해주세요.");
+    setIsLoading(true);
+    try {
+      const res = await fetch('http://localhost:8080/api/pki/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const result = await res.json();
+      if (res.ok) {
+        localStorage.setItem('user_nickname', result.nickname);
+        localStorage.setItem('user_role', result.role);
+        alert(`${result.nickname}님 환영합니다!`);
+        navigate('/');
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (e) {
+      alert("로그인 오류: " + e.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getDeviceId = () => {
+    let deviceId = localStorage.getItem('pki_device_id');
+    if (!deviceId) {
+      deviceId = 'dev-' + crypto.randomUUID();
+      localStorage.setItem('pki_device_id', deviceId);
+    }
+    return deviceId;
+  };
+
+  const openDB = () => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME);
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  };
+
+  const savePrivateKey = async (userId, key) => {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).put(key, userId.trim());
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  };
+
+  const loadPrivateKey = async (userId) => {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(userId.trim());
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  };
+
+  const generateKeyPair = async () => {
+    return await window.crypto.subtle.generateKey(
+      { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+      true, ["sign", "verify"]
+    );
+  };
+
+  const exportPublicKey = async (key) => {
+    const exported = await window.crypto.subtle.exportKey("spki", key);
+    return btoa(String.fromCharCode(...new Uint8Array(exported)));
+  };
+
+  // 1. 본인인증 실행
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    if (!email) return alert("이메일을 입력해주세요.");
+
+    setIsLoading(true);
+    try {
+      const response = await window.PortOne.requestIdentityVerification({
+        storeId: "store-fd77dc69-cea9-4fd9-83c9-9888650fe579",
+        channelKey: "channel-key-8ffdf987-acaa-40a7-bac8-c8000aab12f2",
+        identityVerificationId: `verif-${Date.now()}`
+      });
+
+      if (response.code !== undefined) throw new Error(response.message);
+
+      const verifyRes = await fetch('http://localhost:8080/api/pki/verify-portone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identityVerificationId: response.identityVerificationId })
+      });
+
+      if (!verifyRes.ok) throw new Error("서버 검증 실패");
+
+      const result = await verifyRes.json();
+      if (!result.ci) throw new Error("CI 정보가 없습니다.");
+
+      setRegCi(result.ci);
+      setIsVerified(true);
+
+      const key = await loadPrivateKey(email);
+      if (key) setPrivateKey(key);
+
+      alert(`✨ ${result.name}님 본인인증이 완료되었습니다!`);
+    } catch (e) {
+      alert("본인인증 중 오류 발생: " + e.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 2. 안전 로그인 실행
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!isVerified) return alert("본인인증을 먼저 진행해주세요.");
+    if (!password) return alert("비밀번호를 입력해주세요.");
+
+    setIsLoading(true);
+    try {
+      let currentKey = privateKey;
+      if (!currentKey) currentKey = await loadPrivateKey(email);
+      if (!currentKey) throw new Error("기기 인증 정보가 없습니다. '인증서 재발급'이 필요합니다.");
+
+      const deviceId = getDeviceId();
+      const chalRes = await fetch(`http://localhost:8080/api/pki/login/challenge?deviceId=${deviceId}`);
+      if (!chalRes.ok) throw new Error("서버에서 기기 정보를 찾을 수 없습니다.");
+      const { challenge } = await chalRes.json();
+
+      const sig = await window.crypto.subtle.sign("RSASSA-PKCS1-v1_5", currentKey, new TextEncoder().encode(challenge));
+      const signature = btoa(String.fromCharCode(...new Uint8Array(sig)));
+
+      const verRes = await fetch('http://localhost:8080/api/pki/login/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId, password, signature })
+      });
+
+      const result = await verRes.json();
+      if (verRes.ok) {
+        localStorage.setItem('user_nickname', result.nickname);
+        localStorage.setItem('user_role', result.role || 'ROLE_BUYER');
+        alert(`${result.nickname}님 환영합니다!`);
+        navigate('/');
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (e) {
+      alert("로그인 오류: " + e.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 3. 기기 인증서 재발급
+  const handleReissue = async () => {
+    if (!isVerified || !regCi) return alert("본인인증을 먼저 완료해야 합니다.");
+    if (!password) return alert("비밀번호를 입력해주세요.");
+    if (!window.confirm("인증서를 재발급하시겠습니까?")) return;
+
+    setIsLoading(true);
+    try {
+      const keyPair = await generateKeyPair();
+      const pubKey = await exportPublicKey(keyPair.publicKey);
+
+      const res = await fetch('http://localhost:8080/api/pki/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, nickname: "", role: "", ci: regCi, publicKey: pubKey, deviceId: getDeviceId() })
+      });
+
+      if (res.ok) {
+        await savePrivateKey(email, keyPair.privateKey);
+        setPrivateKey(keyPair.privateKey);
+        alert("인증서가 성공적으로 재발급되었습니다! 이제 로그인이 가능합니다.");
+      } else {
+        const data = await res.json();
+        throw new Error(data.error || "재발급 중 오류 발생");
+      }
+    } catch (e) {
+      alert("오류: " + e.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
       {/* [*] 헤더 내용 수정 */}
-    <Header />
+      <Header />
 
       {/* 2. 메인 콘텐츠 영역 (배경 + 로그인 카드) */}
-      <main 
+      <main
         className="flex-grow flex justify-center items-center bg-cover bg-center p-4 relative"
         style={{ backgroundImage: `url(${backgroundImgUrl})` }}
       >
@@ -28,7 +233,7 @@ const LoginPage = () => {
         {/* 3. 중앙 로그인 카드 (Login Modal) */}
         <div className="relative z-10 bg-white p-12 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100/50 backdrop-blur-sm">
           {/* 카드 상단 */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <p className="text-xs font-semibold text-red-500 uppercase tracking-widest mb-1">
               SECURE LOGIN
             </p>
@@ -37,18 +242,39 @@ const LoginPage = () => {
             </h1>
           </div>
 
+          {/* 모드 탭 */}
+          <div className="flex rounded-xl overflow-hidden border border-gray-200 mb-6">
+            <button
+              type="button"
+              onClick={() => { setMode('user'); setEmail(''); setPassword(''); setIsVerified(false); }}
+              className={`flex-1 py-2.5 text-sm font-bold transition ${mode === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+            >
+              일반 로그인
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('admin'); setEmail(''); setPassword(''); setIsVerified(false); }}
+              className={`flex-1 py-2.5 text-sm font-bold transition ${mode === 'admin' ? 'bg-red-600 text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+            >
+              관리자 로그인
+            </button>
+          </div>
+
           {/* 4. 로그인 폼 (Login Form) */}
-          <form className="flex flex-col gap-6">
+          <form className="flex flex-col gap-6" onSubmit={mode === 'admin' ? handleAdminLogin : (e) => e.preventDefault()}>
             {/* 이메일 입력 */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-sm font-medium text-gray-800">
                 아이디(이메일)
               </label>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
                 className="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-base"
+                disabled={isVerified}
               />
             </div>
 
@@ -58,32 +284,59 @@ const LoginPage = () => {
                 <label htmlFor="password" className="text-sm font-medium text-gray-800">
                   비밀번호
                 </label>
-                <a href="#" className="text-xs text-blue-600 hover:underline">
-                  비밀번호를 잊으셨나요?
-                </a>
               </div>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-base"
               />
             </div>
 
-            {/* 본인인증 실행 버튼 
-                추후 CA 기능 추가 시 여기에 데이터 추가*/}
-            <button 
-              type="submit" 
-              className="w-full mt-2 p-4 bg-blue-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition duration-150 active:scale-[0.98]"
-            >
-              본인인증 실행
-            </button>
+            {mode === 'admin' ? (
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full mt-2 p-4 bg-red-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-red-200 hover:bg-red-700 transition duration-150 active:scale-[0.98] disabled:bg-gray-400"
+              >
+                {isLoading ? '로그인 중...' : '관리자 로그인'}
+              </button>
+            ) : !isVerified ? (
+              <button
+                type="button"
+                onClick={handleVerify}
+                disabled={isLoading}
+                className="w-full mt-2 p-4 bg-blue-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition duration-150 active:scale-[0.98] disabled:bg-gray-400"
+              >
+                {isLoading ? '처리 중...' : '본인인증 실행'}
+              </button>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  disabled={isLoading}
+                  className="w-full mt-2 p-4 bg-green-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-green-200 hover:bg-green-700 transition duration-150 active:scale-[0.98]"
+                >
+                  {isLoading ? '로그인 중...' : '안전 로그인 실행'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReissue}
+                  disabled={isLoading}
+                  className="w-full p-3 bg-purple-600 text-white rounded-xl font-bold text-base shadow-lg shadow-purple-200 hover:bg-purple-700 transition duration-150"
+                >
+                  기기 인증서 재발급
+                </button>
+              </div>
+            )}
           </form>
 
-          {/* 5. 카드 하단 (Footer) 
+          {/* 5. 카드 하단 (Footer)
           [*] 회원가입 페이지와 연결 */}
           <div className="mt-10 text-center text-gray-700">
-            
             계정이 없으신가요? <Link to="/signup" className="text-blue-600 font-medium hover:underline">회원가입</Link>
           </div>
         </div>
