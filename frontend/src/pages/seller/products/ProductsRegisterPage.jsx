@@ -56,7 +56,7 @@ const ProductRegisterPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (Number(formData.price) <= 0 || Number(formData.targetCount) <= 0) {
       alert("가격과 목표 인원은 0보다 큰 수치여야 합니다.");
@@ -68,13 +68,34 @@ const ProductRegisterPage = () => {
     submitData.append('type', productType);
     submitData.append('title', formData.title);
     submitData.append('price', formData.price);
-    // ... 나머지 데이터들 append
+    submitData.append('targetCount', formData.targetCount);
+    submitData.append('description', formData.description);
+    
+    if (productType === 'BOOK') {
+      submitData.append('author', formData.author);
+    }
+    submitData.append('publisher', formData.publisher);
+
     if (imageFile) {
       submitData.append('image', imageFile); // 파일 객체 담기
     }
     
-    alert(`${productType === 'BOOK' ? '도서' : '학과 물품'} 공동구매 등록이 완료되었습니다!`);
-    navigate('/seller/dashboard');
+    try {
+      const response = await fetch('http://localhost:8080/api/products', {
+        method: 'POST',
+        body: submitData, // FormData 전송 시 Content-Type은 브라우저가 자동으로 multipart/form-data로 설정함
+      });
+
+      if (!response.ok) {
+        throw new Error('상품 등록 실패');
+      }
+
+      alert(`${productType === 'BOOK' ? '도서' : '학과 물품'} 공동구매 등록이 완료되었습니다!`);
+      navigate('/seller/dashboard'); // 성공 시 이동
+    } catch (error) {
+      console.error('등록 에러:', error);
+      alert('상품 등록 중 오류가 발생했습니다.');
+    }
   };
 
   return (

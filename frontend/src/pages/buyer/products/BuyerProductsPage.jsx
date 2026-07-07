@@ -13,12 +13,28 @@ const BuyerProductsPage = () => {
   // 🛠️ 뷰 모드 상태 관리 (GRID: 바둑판형, LIST: 목록형)
   const [viewMode, setViewMode] = useState('GRID');
 
-  const productList = [
-    { id: 1, title: '운영체제 10판 (A+ 필기 포함)', major: '컴퓨터소프트웨어', author: 'Silberschatz', current: 3, target: 5, price: '28,000원', status: '모집 중', deadline: '2026.06.15', thumbnail: 'https://images.unsplash.com/photo-1555662800-82a8747209e7?q=80&w=600&auto=format&fit=crop' },
-    { id: 2, title: '스프링 부트 3 백엔드 개발자 되기', major: '컴퓨터소프트웨어', author: '신선영', current: 4, target: 4, price: '21,000원', status: '마감 임박', deadline: '2026.06.07', thumbnail: null },
-    { id: 3, title: '리눅스 시스템 관리자 가이드', major: 'IT융합', author: 'Evi Nemeth', current: 1, target: 10, price: '32,000원', status: '모집 중', deadline: '2026.06.20', thumbnail: 'https://images.unsplash.com/photo-1629654297299-c8506221ca97?q=80&w=600&auto=format&fit=crop' },
-    { id: 4, title: '경영학원론 8판', major: '경영학', author: 'Gulati', current: 8, target: 15, price: '25,000원', status: '모집 중', deadline: '2026.06.30', thumbnail: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=600&auto=format&fit=crop' },
-  ];
+  const [productList, setProductList] = useState([]);
+
+  React.useEffect(() => {
+    fetch('http://localhost:8080/api/products')
+      .then(res => res.json())
+      .then(data => {
+        const formattedData = data.map(item => ({
+          id: item.productId,
+          title: item.title,
+          major: item.type === 'BOOK' ? '전공 도서' : '학과 물품', 
+          author: item.author || item.publisher || '정보 없음',
+          current: item.currentCount,
+          target: item.targetCount,
+          price: item.price.toLocaleString() + '원',
+          status: item.status === 'OPEN' ? '모집 중' : '마감됨',
+          deadline: item.deadline ? item.deadline.split('T')[0] : '기한 없음',
+          thumbnail: item.imageUrl || null
+        }));
+        setProductList(formattedData);
+      })
+      .catch(err => console.error("상품 목록 로드 실패:", err));
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
