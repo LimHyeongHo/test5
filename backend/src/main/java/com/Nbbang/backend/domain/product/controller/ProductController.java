@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173") 
+@CrossOrigin(origins = "http://localhost:3000") 
 public class ProductController {
 
     private final ProductService productService; // 💡 레포지토리 대신 서비스로 변경!
