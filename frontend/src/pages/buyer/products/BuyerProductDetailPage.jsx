@@ -50,26 +50,35 @@ const BuyerProductDetailPage = () => {
       });
   }, [id]);
 
-  // 공구 참여하기 버튼 클릭 핸들러 (테스트용)
-  const handleJoinToggle = () => {
+  // 공구 참여하기 버튼 클릭 핸들러
+  const handleJoinToggle = async () => {
     if (!product) return;
     
-    if (!isJoined) {
-      /* 💡 [MySQL 연동 시 참여 로직 주석]
-        UPDATE products SET current_count = current_count + 1 WHERE id = ?;
-        INSERT INTO joint_purchases (user_id, product_id, join_date) VALUES (?, ?, NOW());
-      */
-      product.currentCount += 1;
-      setIsJoined(true);
-      alert('🎉 공동구매(N빵) 탑승 완료! 공구 달성 시 알림을 보내드립니다.');
-    } else {
-      /* 💡 [MySQL 연동 시 취소 로직 주석]
-        UPDATE products SET current_count = current_count - 1 WHERE id = ?;
-        DELETE FROM joint_purchases WHERE user_id = ? AND product_id = ?;
-      */
-      product.currentCount -= 1;
-      setIsJoined(false);
-      alert('공동구매 참여가 취소되었습니다.');
+    try {
+      if (!isJoined) {
+        // 백엔드 API 연동: 참여 인원 증가
+        const res = await fetch(`http://localhost:8080/api/products/${product.id}/join`, { method: 'POST' });
+        if (!res.ok) throw new Error("참여 처리 실패");
+        const updatedProduct = await res.json();
+        
+        // 서버에서 받은 최신 인원으로 화면 업데이트
+        setProduct(prev => ({ ...prev, currentCount: updatedProduct.currentCount }));
+        setIsJoined(true);
+        alert('🎉 공동구매(N빵) 탑승 완료! 공구 달성 시 알림을 보내드립니다.');
+      } else {
+        // 백엔드 API 연동: 참여 인원 감소 (취소)
+        const res = await fetch(`http://localhost:8080/api/products/${product.id}/cancel`, { method: 'POST' });
+        if (!res.ok) throw new Error("참여 취소 실패");
+        const updatedProduct = await res.json();
+        
+        // 서버에서 받은 최신 인원으로 화면 업데이트
+        setProduct(prev => ({ ...prev, currentCount: updatedProduct.currentCount }));
+        setIsJoined(false);
+        alert('공동구매 참여가 취소되었습니다.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert("서버와 통신하는 중 문제가 발생했습니다.");
     }
   };
 

@@ -38,4 +38,16 @@ public class ProductController {
         Product product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
+
+    @PostMapping("/{id}/join")
+    public ResponseEntity<Product> joinProduct(@PathVariable Long id) {
+        Product product = productService.joinProduct(id);
+        return ResponseEntity.ok(product);
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Product> cancelJoinProduct(@PathVariable Long id) {
+        Product product = productService.cancelJoinProduct(id);
+        return ResponseEntity.ok(product);
+    }
 }

@@ -29,12 +29,38 @@ const BuyerProductsPage = () => {
           price: item.price.toLocaleString() + '원',
           status: item.status === 'OPEN' ? '모집 중' : '마감됨',
           deadline: item.deadline ? item.deadline.split('T')[0] : '기한 없음',
-          thumbnail: item.imageUrl || null
+          thumbnail: item.imageUrl || null,
+          description: item.description || ''
         }));
         setProductList(formattedData);
       })
       .catch(err => console.error("상품 목록 로드 실패:", err));
   }, []);
+
+  // 🌟 프론트엔드 검색 및 필터링 로직
+  const filteredList = React.useMemo(() => {
+    return productList.filter(item => {
+      // 1. 전공 분류 필터 (DB에 전공 컬럼이 없으므로 제목/내용 키워드 매칭으로 우회 처리)
+      if (majorFilter !== 'ALL') {
+        if (!item.title.includes(majorFilter) && !item.description.includes(majorFilter)) {
+          return false;
+        }
+      }
+
+      // 2. 검색어 필터
+      if (searchQuery.trim() !== '') {
+        const query = searchQuery.toLowerCase();
+        const matchTitle = item.title.toLowerCase().includes(query) || item.author.toLowerCase().includes(query);
+        const matchContent = item.description.toLowerCase().includes(query);
+
+        if (searchTarget === 'TITLE' && !matchTitle) return false;
+        if (searchTarget === 'CONTENT' && !matchContent) return false;
+        if (searchTarget === 'ALL' && !(matchTitle || matchContent)) return false;
+      }
+      
+      return true;
+    });
+  }, [productList, searchQuery, searchTarget, majorFilter]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
@@ -123,7 +149,7 @@ const BuyerProductsPage = () => {
         {/* 검색 결과 리스트 */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between px-2">
-            <span className="text-sm font-bold text-gray-500">총 <span className="text-blue-600">124</span>건의 공구가 있습니다.</span>
+            <span className="text-sm font-bold text-gray-500">총 <span className="text-blue-600">{filteredList.length}</span>건의 공구가 있습니다.</span>
             
             <div className="flex items-center gap-4">
               {/* 🌟 뷰 모드 전환 토글 버튼 */}
@@ -154,7 +180,7 @@ const BuyerProductsPage = () => {
 
           {/* 🌟 선택된 뷰 모드에 따라 레이아웃 동적 변경 */}
           <div className={viewMode === 'GRID' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "flex flex-col gap-4"}>
-            {productList.map((item) => (
+            {filteredList.map((item) => (
               <Link 
                 key={item.id} 
                 to={`/buyer/products/${item.id}`}
@@ -227,11 +253,14 @@ const BuyerProductsPage = () => {
             ))}
           </div>
           
-          <div className="flex justify-center mt-6">
-            <button className="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-bold rounded-full transition shadow-sm">
-              더보기 (1 / 10)
-            </button>
-          </div>
+          {/* 데이터가 많을 때만 더보기 버튼 표시되도록 동적 처리 (현재는 10개 초과 시 표시) */}
+          {filteredList.length > 10 && (
+            <div className="flex justify-center mt-6">
+              <button className="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-bold rounded-full transition shadow-sm">
+                더보기 (1 / {Math.ceil(filteredList.length / 10)})
+              </button>
+            </div>
+          )}
         </section>
 
       </main>

@@ -75,4 +75,21 @@ public class ProductService {
         return productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
     }
+
+    // 공동구매 참여
+    @Transactional
+    public Product joinProduct(Long id) {
+        Product product = getProductById(id);
+        // 향후: 해당 유저가 이미 참여했는지 중복 검증 로직 추가
+        product.incrementCurrentCount();
+        return product; // 트랜잭션 종료 시 자동 더티 체킹으로 DB에 반영됨
+    }
+
+    // 공동구매 참여 취소
+    @Transactional
+    public Product cancelJoinProduct(Long id) {
+        Product product = getProductById(id);
+        product.decrementCurrentCount();
+        return product;
+    }
 }

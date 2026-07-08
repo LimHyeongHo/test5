@@ -82,4 +82,21 @@ public class Product {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    // 공동구매 참여 인원 증가 로직
+    public void incrementCurrentCount() {
+        if (this.currentCount == null) {
+            this.currentCount = 0;
+        }
+        if (this.currentCount < this.targetCount) {
+            this.currentCount++;
+        }
+    }
+
+    // 공동구매 참여 인원 감소 로직
+    public void decrementCurrentCount() {
+        if (this.currentCount != null && this.currentCount > 0) {
+            this.currentCount--;
+        }
+    }
 }
