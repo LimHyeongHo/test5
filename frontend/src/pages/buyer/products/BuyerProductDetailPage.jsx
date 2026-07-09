@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Clock, Users, BookOpen, ChevronLeft, CheckCircle, Share2, AlertCircle } from 'lucide-react';
+import { Clock, Users, BookOpen, ChevronLeft, CheckCircle, Share2, AlertCircle, MessageCircle } from 'lucide-react';
 import Header from '../../../components/layout/Header';
 
 const BuyerProductDetailPage = () => {
@@ -219,6 +219,15 @@ const BuyerProductDetailPage = () => {
                 ) : (
                   '공동구매 참여하기 (N빵 탑승)'
                 )}
+              </button>
+
+              {/* 문의하기 (채팅) 버튼 */}
+              <button 
+                onClick={() => alert('채팅 기능은 준비 중입니다.')}
+                className="w-full py-3.5 rounded-2xl font-bold text-gray-700 bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2"
+              >
+                <MessageCircle size={18} />
+                판매자에게 문의하기 (채팅)
               </button>
 
             </div>
