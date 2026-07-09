@@ -56,8 +56,14 @@ const BuyerProductDetailPage = () => {
     
     try {
       if (!isJoined) {
-        // 백엔드 API 연동: 참여 인원 증가
-        const res = await fetch(`http://localhost:8080/api/products/${product.id}/join`, { method: 'POST' });
+        // 백엔드 API 연동: 참여 인원 증가 및 참여자 이름 전달
+        const res = await fetch(`http://localhost:8080/api/products/${product.id}/join`, { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ buyerName: '유한대학교 학우님' })
+        });
         if (!res.ok) throw new Error("참여 처리 실패");
         const updatedProduct = await res.json();
         

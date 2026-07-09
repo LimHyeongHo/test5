@@ -1,5 +1,7 @@
 package com.Nbbang.backend.domain.product.service; // 🚨 본인 경로에 맞게 수정
 
+import com.Nbbang.backend.domain.product.entity.Participation;
+import com.Nbbang.backend.domain.product.repository.ParticipationRepository;
 import com.Nbbang.backend.domain.product.entity.Product;
 import com.Nbbang.backend.domain.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ParticipationRepository participationRepository;
 
     // 로컬 업로드 경로 설정 (프로젝트 실행 위치의 uploads 폴더)
     private final String uploadDir = System.getProperty("user.dir") + "/uploads/";
@@ -76,12 +79,30 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
     }
 
+    // 판매자 기준 상품 목록 조회
+    public List<Product> getProductsBySellerId(Long sellerId) {
+        return productRepository.findBySellerIdOrderByCreatedAtDesc(sellerId);
+    }
+
+    // 판매자 기준 최근 참여자 내역 조회
+    public List<Participation> getParticipationsBySellerId(Long sellerId) {
+        return participationRepository.findByProduct_SellerIdOrderByJoinDateDesc(sellerId);
+    }
+
     // 공동구매 참여
     @Transactional
-    public Product joinProduct(Long id) {
+    public Product joinProduct(Long id, String buyerName) {
         Product product = getProductById(id);
-        // 향후: 해당 유저가 이미 참여했는지 중복 검증 로직 추가
+        
+        // 정원 초과 여부 확인
+        if (product.getCurrentCount() != null && product.getCurrentCount() >= product.getTargetCount()) {
+            throw new IllegalStateException("이미 목표 인원이 달성되었습니다.");
+        }
+
         product.incrementCurrentCount();
+
+        // 참여 내역 테이블 연결 끊음 (테스트 용도)
+        
         return product; // 트랜잭션 종료 시 자동 더티 체킹으로 DB에 반영됨
     }
 
@@ -89,7 +110,10 @@ public class ProductService {
     @Transactional
     public Product cancelJoinProduct(Long id) {
         Product product = getProductById(id);
+        
+        // 참여 내역 테이블 연결 끊음 (테스트 용도)
         product.decrementCurrentCount();
+
         return product;
     }
 }

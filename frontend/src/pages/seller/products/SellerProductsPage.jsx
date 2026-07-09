@@ -2,15 +2,27 @@ import React, { useState } from 'react';
 import { Store, BookOpen, Package, Search, Filter, Edit2, Trash2, CheckCircle, Clock, ExternalLink } from 'lucide-react';
 import Header from '../../../components/layout/Header';
 
-const mockMyProducts = [
-  { id: '1024', type: 'BOOK', title: '컴퓨터 구조 및 설계 6판', price: 35000, currentCount: 8, targetCount: 10, status: '진행중', date: '2026.05.20' },
-  { id: '1023', type: 'BOOK', title: '운영체제(Operating System Concepts) 10판', price: 42000, currentCount: 5, targetCount: 5, status: '목표달성', date: '2026.05.18' },
-  { id: '1025', type: 'ITEM', title: '카시오 공학용 계산기 fx-991EX', price: 28000, currentCount: 12, targetCount: 20, status: '진행중', date: '2026.05.21' },
-  { id: '1021', type: 'ITEM', title: '컴퓨터소프트웨어 전공 실습용 라즈베리파이 키트', price: 85000, currentCount: 15, targetCount: 15, status: '목표달성', date: '2026.05.10' },
-];
-
 const SellerProductsPage = () => {
-  const [products] = useState(mockMyProducts);
+  const [products, setProducts] = useState([]);
+
+  React.useEffect(() => {
+    fetch('http://localhost:8080/api/products/seller/1')
+      .then(res => res.json())
+      .then(data => {
+        const formattedData = data.map(item => ({
+          id: item.productId,
+          type: item.type,
+          title: item.title,
+          price: item.price,
+          currentCount: item.currentCount,
+          targetCount: item.targetCount,
+          status: item.status === 'OPEN' ? (item.currentCount >= item.targetCount ? '목표달성' : '진행중') : '마감됨',
+          date: item.createdAt ? item.createdAt.split('T')[0].replace(/-/g, '.') : '알 수 없음'
+        }));
+        setProducts(formattedData);
+      })
+      .catch(err => console.error("상품 목록 로드 실패:", err));
+  }, []);
   
   // 1. 상태 관리 (탭, 필터, 필터창 열림/닫힘)
   const [activeTab, setActiveTab] = useState('ALL'); 

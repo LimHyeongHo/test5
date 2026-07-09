@@ -1,0 +1,13 @@
+package com.Nbbang.backend.domain.product.repository;
+
+import com.Nbbang.backend.domain.product.entity.Participation;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface ParticipationRepository extends JpaRepository<Participation, Long> {
+    List<Participation> findByProduct_SellerIdOrderByJoinDateDesc(Long sellerId);
+    
+    // 구매 취소 시 가장 최근 참여 기록 하나를 삭제하기 위한 용도
+    List<Participation> findByProduct_ProductIdOrderByJoinDateDesc(Long productId);
+}
