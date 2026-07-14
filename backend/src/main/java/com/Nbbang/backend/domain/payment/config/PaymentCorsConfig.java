@@ -24,6 +24,7 @@ public class PaymentCorsConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/payment/**", config);
+        source.registerCorsConfiguration("/api/pki/**", config);
         return new CorsFilter(source);
     }
 }

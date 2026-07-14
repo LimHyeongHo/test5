@@ -184,6 +184,45 @@ public class PkiController {
         }
     }
 
+    @PostMapping("/admin/login")
+    public ResponseEntity<Map<String, Object>> adminLogin(@RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
+        String email = request.get("email");
+        String password = request.get("password");
+
+        try {
+            UserAccount user = userAccountRepository.findById(email)
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 계정입니다."));
+
+            if (!"ROLE_ADMIN".equals(user.getRole())) {
+                throw new RuntimeException("관리자 계정이 아닙니다.");
+            }
+
+            if (!user.getPassword().equals(password)) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "비밀번호가 일치하지 않습니다.");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            HttpSession session = httpRequest.getSession(true);
+            session.setAttribute("userId", user.getEmail());
+            session.setAttribute("nickname", user.getNickname());
+            session.setAttribute("role", user.getRole());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("nickname", user.getNickname());
+            response.put("role", user.getRole());
+            response.put("message", "관리자 로그인 성공!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(401).body(response);
+        }
+    }
+
     @GetMapping("/login/challenge")
     public ResponseEntity<Map<String, String>> getChallenge(@RequestParam String deviceId) {
         String challenge = pkiService.createChallenge(deviceId);
