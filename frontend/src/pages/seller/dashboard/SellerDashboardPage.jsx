@@ -3,15 +3,41 @@ import { Store, TrendingUp, Package, MessageSquare, PlusCircle, ArrowRight, Book
 import { Link } from 'react-router-dom';
 import Header from '../../../components/layout/Header'; // 공통 헤더
 
-// 가상 판매 게시글 데이터 (판매자 본인이 올린 글들)
-const mockMyListings = [
-  { id: '1024', title: '컴퓨터 구조 및 설계 6판', price: 35000, current: 8, target: 10, status: '진행중' },
-  { id: '1023', title: '운영체제(Operating System Concepts) 10판', price: 42000, current: 5, target: 5, status: '목표달성' },
-  { id: '1022', title: '데이터베이스 시스템', price: 28000, current: 2, target: 15, status: '진행중' },
-];
-
 const SellerDashboardPage = () => {
-  const [listings] = useState(mockMyListings);
+  const [listings, setListings] = useState([]);
+  const [participations, setParticipations] = useState([]);
+
+  React.useEffect(() => {
+    // 1. 내 판매 현황 목록 불러오기
+    fetch('http://localhost:8080/api/products/seller/1')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch products');
+        return res.json();
+      })
+      .then(data => {
+        const formattedData = data.map(item => ({
+          id: item.productId,
+          title: item.title,
+          price: item.price,
+          current: item.currentCount,
+          target: item.targetCount,
+          status: item.status === 'OPEN' ? (item.currentCount >= item.targetCount ? '목표달성' : '진행중') : '마감됨',
+        }));
+        setListings(formattedData);
+      })
+      .catch(err => console.error(err));
+
+    // 2. 누군가 참여한 최근 내역 불러오기 (최근 알림용)
+    fetch('http://localhost:8080/api/products/seller/1/participations')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch participations');
+        return res.json();
+      })
+      .then(data => {
+        setParticipations(data);
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
@@ -43,7 +69,7 @@ const SellerDashboardPage = () => {
           <Link to="/seller/status" className="bg-white rounded-[24px] p-6 border border-gray-200 shadow-sm flex justify-between items-center transition hover:shadow-md">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">진행 중인 공동구매</span>
-              <h3 className="text-3xl font-black text-gray-950 mt-1">3 건</h3>
+              <h3 className="text-3xl font-black text-gray-950 mt-1">{listings.filter(l => l.status === '진행중').length} 건</h3>
               <span className="text-blue-600 text-xs font-bold mt-1 flex items-center gap-1">
                 <Package size={14} /> ACTIVE LISTINGS
               </span>
@@ -57,7 +83,7 @@ const SellerDashboardPage = () => {
           <Link to="/seller/analytics" className="bg-white rounded-[24px] p-6 border border-gray-200 shadow-sm flex justify-between items-center transition hover:shadow-md">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">누적 판매 (예상 수익)</span>
-              <h3 className="text-3xl font-black text-gray-950 mt-1">₩490,000</h3>
+              <h3 className="text-3xl font-black text-gray-950 mt-1">₩{listings.reduce((acc, curr) => acc + (curr.price * curr.current), 0).toLocaleString()}</h3>
               <span className="text-emerald-600 text-xs font-bold mt-1 flex items-center gap-1">
                 <TrendingUp size={14} /> +₩77,000 이번 주
               </span>
@@ -98,7 +124,7 @@ const SellerDashboardPage = () => {
             </div>
 
             <div className="flex flex-col gap-4">
-              {listings.map((item) => {
+              {listings.slice(0, 3).map((item) => {
                 const ratio = Math.min(Math.round((item.current / item.target) * 100), 100);
                 const isCompleted = item.status === '목표달성';
 
@@ -151,35 +177,26 @@ const SellerDashboardPage = () => {
               </div>
 
               <div className="flex flex-col gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-600 mt-1.5 flex-shrink-0"></div>
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-bold text-gray-800 leading-tight">
-                      '운영체제 10판' 목표 인원이 달성되었습니다!
-                    </p>
-                    <span className="text-xs text-gray-400 font-medium"><Clock size={10} className="inline mr-1" />방금 전</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 flex-shrink-0"></div>
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-bold text-gray-800 leading-tight">
-                      구매자 '컴공요정'님이 채팅을 보냈습니다.
-                    </p>
-                    <span className="text-xs text-gray-400 font-medium"><Clock size={10} className="inline mr-1" />2시간 전</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-gray-300 mt-1.5 flex-shrink-0"></div>
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-medium text-gray-600 leading-tight">
-                      플랫폼 정기 시스템 점검 안내 (내일 새벽 2시)
-                    </p>
-                    <span className="text-xs text-gray-400 font-medium"><Clock size={10} className="inline mr-1" />어제</span>
-                  </div>
-                </div>
+                
+                {participations.length > 0 ? (
+                  participations.slice(0, 3).map((part, index) => {
+                    const timeDiffStr = "방금 전"; // 실제로는 part.joinDate 시간 계산 로직 필요
+                    return (
+                      <div key={part.id || index} className="flex items-start gap-3">
+                        <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 flex-shrink-0"></div>
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-sm font-bold text-gray-800 leading-tight">
+                            구매자 '{part.buyerName}'님이 '{part.product?.title || '상품'}'에 탑승했습니다!
+                          </p>
+                          <span className="text-xs text-gray-400 font-medium"><Clock size={10} className="inline mr-1" />{timeDiffStr}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-sm text-gray-400 text-center py-4 font-bold">새로운 알림이 없습니다.</div>
+                )}
+                
               </div>
             </div>
 

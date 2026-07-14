@@ -13,12 +13,54 @@ const BuyerProductsPage = () => {
   // 🛠️ 뷰 모드 상태 관리 (GRID: 바둑판형, LIST: 목록형)
   const [viewMode, setViewMode] = useState('GRID');
 
-  const productList = [
-    { id: 1, title: '운영체제 10판 (A+ 필기 포함)', major: '컴퓨터소프트웨어', author: 'Silberschatz', current: 3, target: 5, price: '28,000원', status: '모집 중', deadline: '2026.06.15', thumbnail: 'https://images.unsplash.com/photo-1555662800-82a8747209e7?q=80&w=600&auto=format&fit=crop' },
-    { id: 2, title: '스프링 부트 3 백엔드 개발자 되기', major: '컴퓨터소프트웨어', author: '신선영', current: 4, target: 4, price: '21,000원', status: '마감 임박', deadline: '2026.06.07', thumbnail: null },
-    { id: 3, title: '리눅스 시스템 관리자 가이드', major: 'IT융합', author: 'Evi Nemeth', current: 1, target: 10, price: '32,000원', status: '모집 중', deadline: '2026.06.20', thumbnail: 'https://images.unsplash.com/photo-1629654297299-c8506221ca97?q=80&w=600&auto=format&fit=crop' },
-    { id: 4, title: '경영학원론 8판', major: '경영학', author: 'Gulati', current: 8, target: 15, price: '25,000원', status: '모집 중', deadline: '2026.06.30', thumbnail: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=600&auto=format&fit=crop' },
-  ];
+  const [productList, setProductList] = useState([]);
+
+  React.useEffect(() => {
+    fetch('http://localhost:8080/api/products')
+      .then(res => res.json())
+      .then(data => {
+        const formattedData = data.map(item => ({
+          id: item.productId,
+          title: item.title,
+          major: item.type === 'BOOK' ? '전공 도서' : '학과 물품', 
+          author: item.author || item.publisher || '정보 없음',
+          current: item.currentCount,
+          target: item.targetCount,
+          price: item.price.toLocaleString() + '원',
+          status: item.status === 'OPEN' ? '모집 중' : '마감됨',
+          deadline: item.deadline ? item.deadline.split('T')[0] : '기한 없음',
+          thumbnail: item.imageUrl || null,
+          description: item.description || ''
+        }));
+        setProductList(formattedData);
+      })
+      .catch(err => console.error("상품 목록 로드 실패:", err));
+  }, []);
+
+  // 🌟 프론트엔드 검색 및 필터링 로직
+  const filteredList = React.useMemo(() => {
+    return productList.filter(item => {
+      // 1. 전공 분류 필터 (DB에 전공 컬럼이 없으므로 제목/내용 키워드 매칭으로 우회 처리)
+      if (majorFilter !== 'ALL') {
+        if (!item.title.includes(majorFilter) && !item.description.includes(majorFilter)) {
+          return false;
+        }
+      }
+
+      // 2. 검색어 필터
+      if (searchQuery.trim() !== '') {
+        const query = searchQuery.toLowerCase();
+        const matchTitle = item.title.toLowerCase().includes(query) || item.author.toLowerCase().includes(query);
+        const matchContent = item.description.toLowerCase().includes(query);
+
+        if (searchTarget === 'TITLE' && !matchTitle) return false;
+        if (searchTarget === 'CONTENT' && !matchContent) return false;
+        if (searchTarget === 'ALL' && !(matchTitle || matchContent)) return false;
+      }
+      
+      return true;
+    });
+  }, [productList, searchQuery, searchTarget, majorFilter]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
@@ -107,7 +149,7 @@ const BuyerProductsPage = () => {
         {/* 검색 결과 리스트 */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between px-2">
-            <span className="text-sm font-bold text-gray-500">총 <span className="text-blue-600">124</span>건의 공구가 있습니다.</span>
+            <span className="text-sm font-bold text-gray-500">총 <span className="text-blue-600">{filteredList.length}</span>건의 공구가 있습니다.</span>
             
             <div className="flex items-center gap-4">
               {/* 🌟 뷰 모드 전환 토글 버튼 */}
@@ -138,7 +180,7 @@ const BuyerProductsPage = () => {
 
           {/* 🌟 선택된 뷰 모드에 따라 레이아웃 동적 변경 */}
           <div className={viewMode === 'GRID' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "flex flex-col gap-4"}>
-            {productList.map((item) => (
+            {filteredList.map((item) => (
               <Link 
                 key={item.id} 
                 to={`/buyer/products/${item.id}`}
@@ -211,11 +253,14 @@ const BuyerProductsPage = () => {
             ))}
           </div>
           
-          <div className="flex justify-center mt-6">
-            <button className="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-bold rounded-full transition shadow-sm">
-              더보기 (1 / 10)
-            </button>
-          </div>
+          {/* 데이터가 많을 때만 더보기 버튼 표시되도록 동적 처리 (현재는 10개 초과 시 표시) */}
+          {filteredList.length > 10 && (
+            <div className="flex justify-center mt-6">
+              <button className="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-bold rounded-full transition shadow-sm">
+                더보기 (1 / {Math.ceil(filteredList.length / 10)})
+              </button>
+            </div>
+          )}
         </section>
 
       </main>

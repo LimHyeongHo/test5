@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Clock, Users, BookOpen, ChevronLeft, CheckCircle, Share2, AlertCircle } from 'lucide-react';
+import { Clock, Users, BookOpen, ChevronLeft, CheckCircle, Share2, AlertCircle, MessageCircle } from 'lucide-react';
 import Header from '../../../components/layout/Header';
 
 const BuyerProductDetailPage = () => {
@@ -10,85 +10,81 @@ const BuyerProductDetailPage = () => {
   const [product, setProduct] = useState(null);
   const [isJoined, setIsJoined] = useState(false); // 테스트용: 공구 참여 상태 토글
 
-  // 🛠️ 임시 더미 데이터 (MySQL DB에 저장될 데이터 구조와 일치시킵니다)
-  const dummyProducts = [
-    { 
-      id: "1", 
-      title: '명품 Java Programming (개정 4판)', 
-      major: '컴퓨터소프트웨어', 
-      author: '황기태, 김효수 저', 
-      publisher: '생능출판',
-      originalPrice: 33000, 
-      price: 24000, 
-      currentCount: 8, 
-      targetCount: 10, 
-      deadline: '2026-06-15',
-      dDay: 'D-5',
-      status: '모집 중',
-      thumbnail: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600&auto=format&fit=crop',
-      description: '컴퓨터소프트웨어 전공 필수 과목인 자바 프로그래밍 교재입니다. 깨끗하게 사용했으며, 시험에 자주 나오는 핵심 단원 위주로 깔끔하게 정리된 필기 노트(PDF)를 함께 공유해 드립니다. 공구 인원이 다 모이면 학과 로비 혹은 과사무실 앞에서 일괄 배부할 예정입니다.'
-    }
-  ];
-
   useEffect(() => {
-    /* ==========================================================================
-      💡 [백엔드 & MySQL 연동 데이터 처리 시 가이드 주석]
-      ==========================================================================
-      
-      1. MySQL Table Schema 구조 예시:
-         CREATE TABLE products (
-           id INT AUTO_INCREMENT PRIMARY KEY,
-           title VARCHAR(255) NOT NULL,
-           major VARCHAR(100),
-           author VARCHAR(100),
-           publisher VARCHAR(100),
-           original_price INT,
-           price INT,
-           current_count INT DEFAULT 0,
-           target_count INT,
-           deadline DATE,
-           thumbnail_url VARCHAR(500),
-           description TEXT
-         );
+    fetch(`http://localhost:8080/api/products/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error("상품을 찾을 수 없습니다.");
+        return res.json();
+      })
+      .then(data => {
+        // D-Day 계산 로직
+        let dDayText = '기한 없음';
+        if (data.deadline) {
+            const deadlineDate = new Date(data.deadline);
+            const today = new Date();
+            const diffTime = deadlineDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            dDayText = diffDays > 0 ? `D-${diffDays}` : (diffDays === 0 ? 'D-Day' : '마감');
+        }
 
-      2. Spring Boot Repository SQL 쿼리 예시:
-         @Query("SELECT p FROM Product p WHERE p.id = :id")
-         Optional<Product> findProductDetailById(@Param("id") Long id);
-         
-         (실제 내부적으로 실행되는 원시 SQL: SELECT * FROM products WHERE id = ?)
-
-      3. React 프론트엔드 API Fetch 코드 예시:
-         fetch(`http://localhost:8080/api/buyer/products/${id}`)
-           .then(res => res.json())
-           .then(data => setProduct(data))
-           .catch(err => console.log(err));
-    */
-
-    // 지금은 더미 데이터에서 id가 일치하는 항목을 찾아 세팅합니다.
-    const found = dummyProducts.find(item => item.id === id);
-    setProduct(found || dummyProducts[0]); // 없을 경우 데모용으로 1번 데이터 노출
+        setProduct({
+          id: String(data.productId),
+          title: data.title,
+          major: data.type === 'BOOK' ? '전공 도서' : '학과 물품',
+          author: data.author || '',
+          publisher: data.publisher || '',
+          originalPrice: data.originalPrice || data.price,
+          price: data.price,
+          currentCount: data.currentCount,
+          targetCount: data.targetCount,
+          deadline: data.deadline ? data.deadline.split('T')[0].replace(/-/g, '.') : '기한 없음',
+          dDay: dDayText,
+          status: data.status === 'OPEN' ? '모집 중' : '마감됨',
+          thumbnail: data.imageUrl || null,
+          description: data.description
+        });
+      })
+      .catch(err => {
+        console.error("상품 상세 로드 실패:", err);
+        alert("상품 정보를 불러오는데 실패했습니다.");
+      });
   }, [id]);
 
-  // 공구 참여하기 버튼 클릭 핸들러 (테스트용)
-  const handleJoinToggle = () => {
+  // 공구 참여하기 버튼 클릭 핸들러
+  const handleJoinToggle = async () => {
     if (!product) return;
     
-    if (!isJoined) {
-      /* 💡 [MySQL 연동 시 참여 로직 주석]
-        UPDATE products SET current_count = current_count + 1 WHERE id = ?;
-        INSERT INTO joint_purchases (user_id, product_id, join_date) VALUES (?, ?, NOW());
-      */
-      product.currentCount += 1;
-      setIsJoined(true);
-      alert('🎉 공동구매(N빵) 탑승 완료! 공구 달성 시 알림을 보내드립니다.');
-    } else {
-      /* 💡 [MySQL 연동 시 취소 로직 주석]
-        UPDATE products SET current_count = current_count - 1 WHERE id = ?;
-        DELETE FROM joint_purchases WHERE user_id = ? AND product_id = ?;
-      */
-      product.currentCount -= 1;
-      setIsJoined(false);
-      alert('공동구매 참여가 취소되었습니다.');
+    try {
+      if (!isJoined) {
+        // 백엔드 API 연동: 참여 인원 증가 및 참여자 이름 전달
+        const res = await fetch(`http://localhost:8080/api/products/${product.id}/join`, { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ buyerName: '유한대학교 학우님' })
+        });
+        if (!res.ok) throw new Error("참여 처리 실패");
+        const updatedProduct = await res.json();
+        
+        // 서버에서 받은 최신 인원으로 화면 업데이트
+        setProduct(prev => ({ ...prev, currentCount: updatedProduct.currentCount }));
+        setIsJoined(true);
+        alert('🎉 공동구매(N빵) 탑승 완료! 공구 달성 시 알림을 보내드립니다.');
+      } else {
+        // 백엔드 API 연동: 참여 인원 감소 (취소)
+        const res = await fetch(`http://localhost:8080/api/products/${product.id}/cancel`, { method: 'POST' });
+        if (!res.ok) throw new Error("참여 취소 실패");
+        const updatedProduct = await res.json();
+        
+        // 서버에서 받은 최신 인원으로 화면 업데이트
+        setProduct(prev => ({ ...prev, currentCount: updatedProduct.currentCount }));
+        setIsJoined(false);
+        alert('공동구매 참여가 취소되었습니다.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert("서버와 통신하는 중 문제가 발생했습니다.");
     }
   };
 
@@ -223,6 +219,15 @@ const BuyerProductDetailPage = () => {
                 ) : (
                   '공동구매 참여하기 (N빵 탑승)'
                 )}
+              </button>
+
+              {/* 문의하기 (채팅) 버튼 */}
+              <button 
+                onClick={() => alert('채팅 기능은 준비 중입니다.')}
+                className="w-full py-3.5 rounded-2xl font-bold text-gray-700 bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2"
+              >
+                <MessageCircle size={18} />
+                판매자에게 문의하기 (채팅)
               </button>
 
             </div>

@@ -26,7 +26,7 @@ const ProductRegisterPage = () => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      setImagePreview(URL.createObjectURL(file)); 
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -34,7 +34,7 @@ const ProductRegisterPage = () => {
     setImageFile(null);
     setImagePreview(null);
   };
-  
+
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
@@ -56,25 +56,46 @@ const ProductRegisterPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (Number(formData.price) <= 0 || Number(formData.targetCount) <= 0) {
       alert("가격과 목표 인원은 0보다 큰 수치여야 합니다.");
       return;
     }
-    
+
     // 🌟 이미지가 포함된 데이터를 보낼 때는 FormData를 사용합니다
     const submitData = new FormData();
     submitData.append('type', productType);
     submitData.append('title', formData.title);
     submitData.append('price', formData.price);
-    // ... 나머지 데이터들 append
+    submitData.append('targetCount', formData.targetCount);
+    submitData.append('description', formData.description);
+
+    if (productType === 'BOOK') {
+      submitData.append('author', formData.author);
+    }
+    submitData.append('publisher', formData.publisher);
+
     if (imageFile) {
       submitData.append('image', imageFile); // 파일 객체 담기
     }
-    
-    alert(`${productType === 'BOOK' ? '도서' : '학과 물품'} 공동구매 등록이 완료되었습니다!`);
-    navigate('/seller/dashboard');
+
+    try {
+      const response = await fetch('http://localhost:8080/api/products', {
+        method: 'POST',
+        body: submitData, // FormData 전송 시 Content-Type은 브라우저가 자동으로 multipart/form-data로 설정함
+      });
+
+      if (!response.ok) {
+        throw new Error('상품 등록 실패');
+      }
+
+      alert(`${productType === 'BOOK' ? '도서' : '학과 물품'} 공동구매 등록이 완료되었습니다!`);
+      navigate('/seller/dashboard'); // 성공 시 이동
+    } catch (error) {
+      console.error('등록 에러:', error);
+      alert('상품 등록 중 오류가 발생했습니다.');
+    }
   };
 
   return (
@@ -97,26 +118,24 @@ const ProductRegisterPage = () => {
       </section>
 
       <main className="flex-grow max-w-4xl w-full mx-auto p-6 md:p-8 flex flex-col gap-8">
-        
+
         {/* 등록 유형 선택 토글 탭 */}
         <div className="flex gap-2 p-1.5 bg-gray-200/70 rounded-2xl w-full sm:w-max mx-auto shadow-inner">
           <button
             onClick={() => handleTypeChange('BOOK')}
-            className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${
-              productType === 'BOOK' 
-                ? 'bg-white text-blue-600 shadow-sm ring-1 ring-gray-900/5' 
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
-            }`}
+            className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${productType === 'BOOK'
+              ? 'bg-white text-blue-600 shadow-sm ring-1 ring-gray-900/5'
+              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+              }`}
           >
             <BookOpen size={18} /> 전공 도서
           </button>
           <button
             onClick={() => handleTypeChange('ITEM')}
-            className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${
-              productType === 'ITEM' 
-                ? 'bg-white text-blue-600 shadow-sm ring-1 ring-gray-900/5' 
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
-            }`}
+            className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${productType === 'ITEM'
+              ? 'bg-white text-blue-600 shadow-sm ring-1 ring-gray-900/5'
+              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+              }`}
           >
             <Package size={18} /> 학과 물품
           </button>
@@ -124,20 +143,20 @@ const ProductRegisterPage = () => {
 
         {/* 입력 폼 전체 카드 패널 */}
         <form onSubmit={handleSubmit} className="bg-white rounded-[28px] p-8 md:p-10 border border-gray-200 shadow-sm flex flex-col gap-8">
-          
+
           {/* 섹션 1: 기본 정보 */}
           <div className="flex flex-col gap-5">
             <h3 className="text-xl font-extrabold text-gray-950 tracking-tight flex items-center gap-2 border-b border-gray-100 pb-3">
               {productType === 'BOOK' ? <BookOpen size={20} className="text-blue-600" /> : <Package size={20} className="text-blue-600" />}
               {productType === 'BOOK' ? '도서 기본 정보' : '물품 기본 정보'}
             </h3>
-            
+
             {/* 제목/물품명 */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="title" className="text-sm font-bold text-gray-700">
                 {productType === 'BOOK' ? '전공서적 명' : '물품 명'}
               </label>
-              <input 
+              <input
                 type="text" id="title" required
                 value={formData.title} onChange={handleChange}
                 placeholder={productType === 'BOOK' ? "예) 컴퓨터 구조 및 설계 6판" : "예) 카시오 공학용 계산기 fx-991EX"}
@@ -150,7 +169,7 @@ const ProductRegisterPage = () => {
               {productType === 'BOOK' && (
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="author" className="text-sm font-bold text-gray-700">저자</label>
-                  <input 
+                  <input
                     type="text" id="author" required
                     value={formData.author} onChange={handleChange}
                     placeholder="예) David A. Patterson"
@@ -162,7 +181,7 @@ const ProductRegisterPage = () => {
                 <label htmlFor="publisher" className="text-sm font-bold text-gray-700">
                   {productType === 'BOOK' ? '출판사' : '제조사 / 브랜드'}
                 </label>
-                <input 
+                <input
                   type="text" id="publisher" required
                   value={formData.publisher} onChange={handleChange}
                   placeholder={productType === 'BOOK' ? "예) 한티미디어" : "예) 카시오 (CASIO)"}
@@ -183,7 +202,7 @@ const ProductRegisterPage = () => {
                 <label htmlFor="price" className="text-sm font-bold text-gray-700">공동구매 제안 가격 (₩)</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">₩</span>
-                  <input 
+                  <input
                     type="number" id="price" required
                     value={formData.price} onChange={handleChange}
                     placeholder="예) 35000"
@@ -195,7 +214,7 @@ const ProductRegisterPage = () => {
                 <label htmlFor="targetCount" className="text-sm font-bold text-gray-700">목표 달성 인원 (명)</label>
                 <div className="relative">
                   <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                  <input 
+                  <input
                     type="number" id="targetCount" required
                     value={formData.targetCount} onChange={handleChange}
                     placeholder="예) 10"
@@ -220,8 +239,8 @@ const ProductRegisterPage = () => {
               {imagePreview ? (
                 <div className="relative w-full sm:w-1/2 md:w-1/3 aspect-[4/3] rounded-2xl overflow-hidden border border-gray-200 group">
                   <img src={imagePreview} alt="미리보기" className="w-full h-full object-cover" />
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={handleRemoveImage}
                     className="absolute top-2 right-2 bg-white/90 text-red-500 p-1.5 rounded-full shadow-md hover:bg-red-50 hover:text-red-600 transition"
                   >
@@ -237,13 +256,13 @@ const ProductRegisterPage = () => {
                     {productType === 'BOOK' ? '클릭하여 전공책 앞표지 업로드' : '클릭하여 물품의 전체 형태가 보이는 사진 업로드'}
                   </span>
                   <span className="text-[10px] text-gray-400">PNG, JPG 파일 지원 (최대 5MB)</span>
-                  
+
                   {/* 클릭 이벤트를 받아줄 숨겨진 input 태그 */}
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleImageChange} 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
                   />
                 </label>
               )}
@@ -251,7 +270,7 @@ const ProductRegisterPage = () => {
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="description" className="text-sm font-bold text-gray-700">상세 설명</label>
-              <textarea 
+              <textarea
                 id="description" required rows={5}
                 value={formData.description} onChange={handleChange}
                 placeholder={productType === 'BOOK' ? "학과 내 수업 연계 정보 등을 상세히 기재해 주세요." : "물품의 실측 사이즈 등을 상세히 기재해 주세요."}
@@ -271,13 +290,13 @@ const ProductRegisterPage = () => {
           </div>
 
           <div className="flex gap-4 border-t border-gray-100 pt-6 mt-2">
-            <button 
+            <button
               type="button" onClick={() => navigate('/seller/dashboard')}
               className="px-6 py-4 border border-gray-200 text-gray-600 text-base font-bold rounded-xl hover:bg-gray-100 transition"
             >
               취소
             </button>
-            <button 
+            <button
               type="submit"
               className="flex-grow py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition flex items-center justify-center gap-2"
             >
