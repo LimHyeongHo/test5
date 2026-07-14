@@ -40,6 +40,9 @@ dependencies {
 	// Spring Security (인증 및 보안용)
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
+	// WebSocket API 추가 (실시간 채팅용)
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 	// BouncyCastle (PKI & CA 인증서 기능용)
 	implementation 'org.bouncycastle:bcprov-jdk18on:1.78'
 	implementation 'org.bouncycastle:bcpkix-jdk18on:1.78'
