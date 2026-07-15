@@ -101,8 +101,11 @@ public class ProductService {
 
         product.incrementCurrentCount();
 
-        // 참여 내역 테이블 연결 끊음 (테스트 용도)
-        
+        Participation participation = new Participation();
+        participation.setProduct(product);
+        participation.setBuyerName(buyerName);
+        participationRepository.save(participation);
+
         return product; // 트랜잭션 종료 시 자동 더티 체킹으로 DB에 반영됨
     }
 

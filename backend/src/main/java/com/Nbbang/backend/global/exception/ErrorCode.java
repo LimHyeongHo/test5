@@ -33,6 +33,8 @@ public enum ErrorCode {
     PURCHASE_ALREADY_JOINED(409, "이미 참여 중인 공동구매입니다"),
 
     // ========== 상품 (PRODUCT) ==========
+    //[추가]
+    PRODUCT_NOT_FOUND(404, "존재하지 않는 상품입니다"),
     PRODUCT_INVALID_FILE_FORMAT(400, "PNG, JPG 파일만 업로드 가능합니다"),
     PRODUCT_FILE_SIZE_EXCEEDED(400, "파일 크기는 5MB 이하여야 합니다"),
     PRODUCT_INVALID_DEADLINE(400, "마감일은 오늘 이후여야 합니다"),
