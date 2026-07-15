@@ -6,6 +6,7 @@ import com.Nbbang.backend.domain.auth.repository.DeviceCertRepository;
 import com.Nbbang.backend.domain.auth.repository.UserAccountRepository;
 import com.Nbbang.backend.domain.auth.service.CAService;
 import com.Nbbang.backend.domain.auth.service.PkiService;
+import com.Nbbang.backend.domain.member.service.CertificateSessionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +23,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pki")
-@CrossOrigin(origins = "*")
+// [수정] 세션 쿠키(JSESSIONID)를 자격증명 포함 CORS로 처리하기 위해 SecurityConfig의 CorsConfigurationSource로 일원화 (와일드카드 CrossOrigin 제거)
 public class PkiController {
 
     private final PkiService pkiService;
     private final UserAccountRepository userAccountRepository;
     private final DeviceCertRepository deviceCertRepository;
     private final CAService caService;
+    private final CertificateSessionService certificateSessionService;
 
     @Value("${portone.api-secret}")
     private String portoneApiSecret;
@@ -37,14 +39,16 @@ public class PkiController {
     private String portoneBaseUrl;
 
     // 생성자 주입
-    public PkiController(PkiService pkiService, 
-                         UserAccountRepository userAccountRepository, 
+    public PkiController(PkiService pkiService,
+                         UserAccountRepository userAccountRepository,
                          DeviceCertRepository deviceCertRepository,
-                         CAService caService) {
+                         CAService caService,
+                         CertificateSessionService certificateSessionService) {
         this.pkiService = pkiService;
         this.userAccountRepository = userAccountRepository;
         this.deviceCertRepository = deviceCertRepository;
         this.caService = caService;
+        this.certificateSessionService = certificateSessionService;
     }
 
     /**
@@ -264,6 +268,9 @@ public class PkiController {
                 session.setAttribute("userId", user.getEmail());
                 session.setAttribute("nickname", user.getNickname());
                 session.setAttribute("role", user.getRole());
+
+                // 로그인 성공 시 인증서 유효 타이머(기본 10분) 시작
+                certificateSessionService.startSession(user.getEmail());
 
                 response.put("success", true);
                 response.put("nickname", user.getNickname());

@@ -2,6 +2,9 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
+/// [신규] 인증서 만료 타이머(헤더 +5분/-5분, 00:00 만료 로그아웃) 전역 상태 Provider
+import { CertificateTimerProvider } from './contexts/CertificateTimerContext';
+
 import LoginPage from './pages/login/LoginPage';
 import SignupPage from './pages/signup/SignupPage';
 import HomePage_v2 from './pages/home/HomePage_v2';
@@ -45,6 +48,8 @@ import MyPageSettlement from './pages/shared/mypage/MyPageSettlement';
 function App() {
   return (
     <BrowserRouter>
+      {/* [신규] 인증서 타이머 Provider로 전체 라우트를 감싸 어느 페이지에서도 남은 시간을 공유 */}
+      <CertificateTimerProvider>
       <Routes>
         {/* 메인 주소(localhost:3000/)로 접속했을 때 보여줄 화면 */}
         {/* <Route path="/" element={<Home />} /> */}
@@ -117,8 +122,9 @@ function App() {
         { /* ---------------------------------------------*/}
 
                 {/* 나중에 전공책 상세페이지 같은 걸 추가하면 이렇게 씁니다 */}
-                {/* <Route path="/book/:id" element={<BookDetail />} /> */} 
+                {/* <Route path="/book/:id" element={<BookDetail />} /> */}
       </Routes>
+      </CertificateTimerProvider>
     </BrowserRouter>
   );
 }
