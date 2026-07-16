@@ -3,6 +3,7 @@
 *.jar
 *.war
 logs/
+uploads/
 
 ### Gradle (요리사 로봇 임시 저장소) ###
 .gradle/
