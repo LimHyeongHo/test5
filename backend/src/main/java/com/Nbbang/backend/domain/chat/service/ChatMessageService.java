@@ -43,7 +43,7 @@ public class ChatMessageService {
     public List<ChatMessageResponse> getHistory(Long roomId) {
         try {
             return chatMessageRepository
-                    .findTop50ByRoomIdAndTypeOrderBySentAtAsc(roomId, MessageType.CHAT)
+                    .findTop50ByRoomIdAndTypeInOrderBySentAtAsc(roomId, List.of(MessageType.CHAT, MessageType.IMAGE))
                     .stream()
                     .map(msg -> {
                         String nickname = userAccountRepository.findById(msg.getSenderEmail())
