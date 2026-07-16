@@ -3,7 +3,6 @@
 *.jar
 *.war
 logs/
-uploads/
 
 ### Gradle (요리사 로봇 임시 저장소) ###
 .gradle/
@@ -14,7 +13,6 @@ build/
 # DB 비밀번호, API 키 등이 들어가는 파일들
 application.yml
 application.properties
-**/application-local.properties
 *.key
 *.p12
 *.pem
