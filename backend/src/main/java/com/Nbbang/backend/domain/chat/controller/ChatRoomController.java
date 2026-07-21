@@ -12,9 +12,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 채팅방 REST API
@@ -76,6 +83,35 @@ public class ChatRoomController {
         chatRoomService.resetUnreadCount(roomId, myEmail);
         messagingTemplate.convertAndSend("/topic/chat/" + roomId, ChatMessageResponse.readEvent(roomId));
         return ResponseEntity.ok().build();
+    }
+
+    /** 채팅 이미지 업로드 — 저장 후 접근 URL 반환 (상품 이미지 업로드와 동일한 로컬 저장 방식) */
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, String>> uploadImage(
+            @RequestParam("image") MultipartFile image,
+            HttpSession session) {
+        getEmail(session); // 로그인 안 된 경우 401
+
+        String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        try {
+            File directory = new File(uploadDir);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String originalFilename = image.getOriginalFilename();
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : ".jpg";
+            String savedFilename = UUID.randomUUID().toString() + extension;
+
+            Path filePath = Paths.get(uploadDir + savedFilename);
+            Files.write(filePath, image.getBytes());
+
+            return ResponseEntity.ok(Map.of("url", "http://localhost:8080/uploads/" + savedFilename));
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
+        }
     }
 
     /** 세션에서 userId(email) 추출 — 로그인 안 된 경우 401 */

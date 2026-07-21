@@ -43,11 +43,13 @@ public class ChatController {
         }
 
         // 2. 메시지 저장
+        MessageType type = request.getType() != null ? request.getType() : MessageType.CHAT;
         ChatMessageResponse response = chatMessageService.save(
-                request.getRoomId(), senderEmail, request.getContent(), MessageType.CHAT);
+                request.getRoomId(), senderEmail, request.getContent(), type);
 
-        // 3. 채팅방 마지막 메시지 업데이트
-        chatRoomService.updateLastMessage(request.getRoomId(), senderEmail, request.getContent());
+        // 3. 채팅방 마지막 메시지 업데이트 (이미지는 URL 대신 미리보기 문구)
+        String lastMessagePreview = type == MessageType.IMAGE ? "[사진]" : request.getContent();
+        chatRoomService.updateLastMessage(request.getRoomId(), senderEmail, lastMessagePreview);
 
         // 4. 해당 채팅방 구독자 전체에게 브로드캐스트
         messagingTemplate.convertAndSend("/topic/chat/" + request.getRoomId(), response);

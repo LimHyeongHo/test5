@@ -11,8 +11,8 @@ import java.util.List;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-    // 채팅방 메시지 내역 (최근 50개)
-    List<ChatMessage> findTop50ByRoomIdAndTypeOrderBySentAtAsc(Long roomId, MessageType type);
+    // 채팅방 메시지 내역 (최근 50개) — CHAT, IMAGE 등 화면에 표시되는 타입만 (JOIN/LEAVE/READ 이벤트는 제외)
+    List<ChatMessage> findTop50ByRoomIdAndTypeInOrderBySentAtAsc(Long roomId, List<MessageType> types);
 
     // 안읽은 메시지 일괄 읽음 처리
     @Modifying

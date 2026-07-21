@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Store, Send, Image as ImageIcon, MoreVertical, Search, User } from 'lucide-react';
+import { Store, Send, Image as ImageIcon, MoreVertical, Search, User, Calendar, X } from 'lucide-react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import Header from '../../../components/layout/Header';
@@ -23,6 +23,32 @@ const formatTime = (dateTimeStr) => {
   }
 };
 
+// 메시지 말풍선 옆에 붙는 시간 (오전/오후 h:mm)
+const formatMessageClock = (dateTimeStr) => {
+  if (!dateTimeStr) return '';
+  return new Date(dateTimeStr).toLocaleTimeString('ko-KR', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+// 날짜 구분선 (yyyy년 m월 d일 요일)
+const formatDateSeparator = (dateTimeStr) => {
+  if (!dateTimeStr) return '';
+  return new Date(dateTimeStr).toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  });
+};
+
+const isSameDay = (a, b) => {
+  if (!a || !b) return false;
+  return new Date(a).toDateString() === new Date(b).toDateString();
+};
+
 const SharedChatPage = ({ userRole = 'SELLER' }) => {
   const [rooms, setRooms] = useState([]);
   const [activeRoom, setActiveRoom] = useState(null);
@@ -30,7 +56,10 @@ const SharedChatPage = ({ userRole = 'SELLER' }) => {
   const [message, setMessage] = useState('');
   const [connected, setConnected] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
+  const fileInputRef = useRef(null);
   const stompClientRef = useRef(null);
   const allSubscriptionsRef = useRef({});  // roomId → subscription
   const activeRoomRef = useRef(null);      // 스테일 클로저 방지
@@ -147,7 +176,7 @@ const SharedChatPage = ({ userRole = 'SELLER' }) => {
               if (r.roomId !== room.roomId) return r;
               return {
                 ...r,
-                lastMessage: msg.content,
+                lastMessage: msg.type === 'IMAGE' ? '[사진]' : msg.content,
                 unreadCount: isOthersPending ? r.unreadCount + 1 : r.unreadCount,
               };
             })
@@ -196,6 +225,42 @@ const SharedChatPage = ({ userRole = 'SELLER' }) => {
       body: JSON.stringify({ roomId: activeRoom.roomId, content: message.trim() }),
     });
     setMessage('');
+  };
+
+  // ── 이미지 첨부 ───────────────────────────────────────────────
+  const handleImageButtonClick = () => {
+    if (!connected || !activeRoom) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleImageSelected = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // 같은 파일 다시 선택해도 onChange 발생하도록 초기화
+    if (!file || !activeRoom) return;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch(`${API_BASE}/chat/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      if (!res.ok) throw new Error('이미지 업로드 실패');
+      const { url } = await res.json();
+
+      stompClientRef.current.publish({
+        destination: '/app/chat.message',
+        body: JSON.stringify({ roomId: activeRoom.roomId, content: url, type: 'IMAGE' }),
+      });
+    } catch (err) {
+      console.error('이미지 전송 실패', err);
+      alert('이미지 전송에 실패했습니다.');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const filteredRooms = rooms.filter(r =>
@@ -333,43 +398,75 @@ const SharedChatPage = ({ userRole = 'SELLER' }) => {
                     </span>
                   </div>
                 )}
-                {messages.filter(msg => msg.type !== 'READ').map((msg) => {
-                  const isMe = msg.senderEmail === currentEmail;
-                  return (
-                    <div
-                      key={msg.id || `${msg.senderEmail}-${msg.sentAt}`}
-                      className={`flex max-w-[75%] ${isMe ? 'self-end flex-row-reverse' : 'self-start'}`}
-                    >
-                      {!isMe && (
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 shrink-0 mr-2">
-                          <User size={16} />
-                        </div>
-                      )}
-                      <div className={`flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'}`}>
-                        {!isMe && (
-                          <span className="text-[11px] font-medium text-gray-500 px-1">
-                            {msg.senderNickname}
-                          </span>
+                {(() => {
+                  const filteredMessages = messages.filter(msg => msg.type !== 'READ');
+                  return filteredMessages.map((msg, idx) => {
+                    const isMe = msg.senderEmail === currentEmail;
+                    const prevMsg = filteredMessages[idx - 1];
+                    const showDateSeparator = !isSameDay(prevMsg?.sentAt, msg.sentAt);
+                    return (
+                      <React.Fragment key={msg.id || `${msg.senderEmail}-${msg.sentAt}`}>
+                        {showDateSeparator && (
+                          <div className="flex justify-center my-2">
+                            <span className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 bg-gray-200/70 px-3 py-1 rounded-full">
+                              <Calendar size={12} />
+                              {formatDateSeparator(msg.sentAt)}
+                            </span>
+                          </div>
                         )}
-                        <div className="flex items-end gap-1">
-                          {isMe && !msg.isRead && (
-                            <span className="text-[10px] font-bold text-yellow-500 mb-0.5 self-end">1</span>
+                        <div
+                          className={`flex max-w-[75%] ${isMe ? 'self-end flex-row-reverse' : 'self-start'}`}
+                        >
+                          {!isMe && (
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 shrink-0 mr-2">
+                              <User size={16} />
+                            </div>
                           )}
-                          <div className={`p-3 rounded-2xl text-sm ${
-                            isMe
-                              ? 'bg-blue-600 text-white rounded-tr-none'
-                              : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'
-                          }`}>
-                            {msg.content}
+                          <div className={`flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'}`}>
+                            {!isMe && (
+                              <span className="text-[11px] font-medium text-gray-500 px-1">
+                                {msg.senderNickname}
+                              </span>
+                            )}
+                            <div className="flex items-end gap-1">
+                              {isMe && (
+                                <div className="flex flex-col items-end mb-0.5">
+                                  {!msg.isRead && (
+                                    <span className="text-[10px] font-bold text-yellow-500">1</span>
+                                  )}
+                                  <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
+                                    {formatMessageClock(msg.sentAt)}
+                                  </span>
+                                </div>
+                              )}
+                              {msg.type === 'IMAGE' ? (
+                                <img
+                                  src={msg.content}
+                                  alt="전송된 이미지"
+                                  className="max-w-[220px] max-h-[220px] rounded-2xl object-cover cursor-pointer"
+                                  onClick={() => setLightboxImage(msg.content)}
+                                />
+                              ) : (
+                                <div className={`p-3 rounded-2xl text-sm ${
+                                  isMe
+                                    ? 'bg-blue-600 text-white rounded-tr-none'
+                                    : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'
+                                }`}>
+                                  {msg.content}
+                                </div>
+                              )}
+                              {!isMe && (
+                                <span className="text-[10px] text-gray-400 font-medium self-end mb-0.5 whitespace-nowrap">
+                                  {formatMessageClock(msg.sentAt)}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <span className="text-[10px] text-gray-400 font-medium px-1">
-                          {formatTime(msg.sentAt)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                      </React.Fragment>
+                    );
+                  });
+                })()}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -379,7 +476,19 @@ const SharedChatPage = ({ userRole = 'SELLER' }) => {
                   onSubmit={handleSendMessage}
                   className="flex items-end gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-200 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition"
                 >
-                  <button type="button" className="p-2.5 text-gray-400 hover:text-gray-600 transition rounded-xl hover:bg-gray-200 shrink-0">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelected}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleImageButtonClick}
+                    disabled={!connected || uploadingImage}
+                    className="p-2.5 text-gray-400 hover:text-gray-600 transition rounded-xl hover:bg-gray-200 shrink-0 disabled:opacity-50"
+                  >
                     <ImageIcon size={20} />
                   </button>
                   <textarea
@@ -414,6 +523,27 @@ const SharedChatPage = ({ userRole = 'SELLER' }) => {
         </section>
 
       </main>
+
+      {/* 이미지 라이트박스 모달 */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            onClick={() => setLightboxImage(null)}
+            className="absolute top-4 right-4 text-white/80 hover:text-white transition p-2"
+          >
+            <X size={28} />
+          </button>
+          <img
+            src={lightboxImage}
+            alt="원본 이미지"
+            className="max-w-full max-h-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };
