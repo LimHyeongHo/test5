@@ -1,12 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { User, ShieldAlert, LogOut } from 'lucide-react';
+// [신규] 인증서 남은 시간(mm:ss) + +5분/-5분 조정을 위한 Context 훅
+import { useCertificateTimer } from '../../contexts/CertificateTimerContext';
+
+// [신규] 초 단위를 "mm:ss" 형식 문자열로 변환
+const formatRemaining = (totalSeconds) => {
+  const clamped = Math.max(totalSeconds, 0);
+  const m = Math.floor(clamped / 60).toString().padStart(2, '0');
+  const s = Math.floor(clamped % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+};
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [nickname, setNickname] = useState(localStorage.getItem('user_nickname') || '로그인 필요');
   const [userRole, setUserRole] = useState(localStorage.getItem('user_role') || 'ROLE_BUYER');
+  // [신규] 인증서 타이머 상태 (남은 초 / 조정 함수)
+  const { remainingSeconds, extend } = useCertificateTimer();
 
   useEffect(() => {
     const storedNickname = localStorage.getItem('user_nickname');
@@ -17,7 +29,16 @@ const Header = () => {
     else setUserRole('ROLE_BUYER');
   }, [location]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // [수정] 기존엔 localStorage만 지웠는데, 로그아웃 시 서버 인증서도 함께 폐기하도록 요청 추가
+    try {
+      await fetch('http://localhost:8080/api/member/certificate/revoke', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (e) {
+      // 서버 요청이 실패해도 로컬 로그아웃은 그대로 진행
+    }
     localStorage.removeItem('user_nickname');
     localStorage.removeItem('user_role');
     setNickname('로그인 필요');
@@ -72,6 +93,36 @@ const Header = () => {
 
         {localStorage.getItem('user_nickname') ? (
           <>
+            {/* [신규] 인증서 남은 시간 표시 + +5분/-5분 조정 버튼 (인증서 타이머 세션이 있을 때만 표시) */}
+            {remainingSeconds !== null && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gray-50 border border-gray-200 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => extend(-5)}
+                  className="w-6 h-6 flex items-center justify-center text-sm font-bold text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition"
+                  title="인증서 유효시간 5분 감소"
+                >
+                  -
+                </button>
+                <span
+                  className={`text-xs font-mono font-bold tabular-nums w-10 text-center ${
+                    remainingSeconds <= 60 ? 'text-red-600' : 'text-gray-700'
+                  }`}
+                  title="인증서 남은 유효시간"
+                >
+                  {formatRemaining(remainingSeconds)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => extend(5)}
+                  className="w-6 h-6 flex items-center justify-center text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-full transition"
+                  title="인증서 유효시간 5분 증가"
+                >
+                  +
+                </button>
+              </div>
+            )}
+
             <Link
               to={myPagePath}
               className="flex items-center gap-3 hover:bg-gray-50 px-3 py-1.5 rounded-2xl transition cursor-pointer group shrink-0"

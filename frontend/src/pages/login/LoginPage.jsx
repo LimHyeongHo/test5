@@ -6,6 +6,9 @@ import { Link, useNavigate } from 'react-router-dom';
 /// [*] 헤더 컴포넌트 연결
 import Header from '../../components/layout/Header';
 
+/// [신규] 로그인 성공 직후 인증서 타이머(10분)를 서버와 동기화하기 위한 훅
+import { useCertificateTimer } from '../../contexts/CertificateTimerContext';
+
 const backgroundImgUrl = "https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=2600";
 
 const DB_NAME = "PKI_KeyStore";
@@ -20,6 +23,8 @@ const LoginPage = () => {
   const [regCi, setRegCi] = useState(null);
   const [privateKey, setPrivateKey] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  // [신규] 로그인 성공 후 인증서 타이머 상태를 갱신하기 위해 Context에서 syncStatus를 꺼내옴
+  const { syncStatus } = useCertificateTimer();
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
@@ -29,12 +34,16 @@ const LoginPage = () => {
       const res = await fetch('http://localhost:8080/api/pki/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // [수정] 세션 쿠키를 주고받기 위해 credentials 추가
+        credentials: 'include',
         body: JSON.stringify({ email, password })
       });
       const result = await res.json();
       if (res.ok) {
         localStorage.setItem('user_nickname', result.nickname);
         localStorage.setItem('user_role', result.role);
+        // [신규] 관리자는 인증서 타이머가 없지만, 혹시 있을 상태를 정리하기 위해 동기화 호출
+        await syncStatus();
         alert(`${result.nickname}님 환영합니다!`);
         navigate('/');
       } else {
@@ -166,6 +175,8 @@ const LoginPage = () => {
       const verRes = await fetch('http://localhost:8080/api/pki/login/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // [수정] 로그인 성공 시 서버가 내려주는 세션 쿠키(JSESSIONID)를 저장/전송하기 위해 credentials 추가
+        credentials: 'include',
         body: JSON.stringify({ deviceId, password, signature })
       });
 
@@ -173,6 +184,8 @@ const LoginPage = () => {
       if (verRes.ok) {
         localStorage.setItem('user_nickname', result.nickname);
         localStorage.setItem('user_role', result.role || 'ROLE_BUYER');
+        // [신규] 로그인 성공 직후 서버에서 시작된 인증서 10분 타이머를 프론트와 동기화
+        await syncStatus();
         alert(`${result.nickname}님 환영합니다!`);
         navigate('/');
       } else {

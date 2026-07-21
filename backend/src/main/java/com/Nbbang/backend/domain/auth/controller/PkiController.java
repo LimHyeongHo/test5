@@ -6,6 +6,7 @@ import com.Nbbang.backend.domain.auth.repository.DeviceCertRepository;
 import com.Nbbang.backend.domain.auth.repository.UserAccountRepository;
 import com.Nbbang.backend.domain.auth.service.CAService;
 import com.Nbbang.backend.domain.auth.service.PkiService;
+import com.Nbbang.backend.domain.member.service.CertificateSessionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +23,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pki")
-@CrossOrigin(origins = "*")
+// [수정] 세션 쿠키(JSESSIONID)를 자격증명 포함 CORS로 처리하기 위해 SecurityConfig의 CorsConfigurationSource로 일원화 (와일드카드 CrossOrigin 제거)
 public class PkiController {
 
     private final PkiService pkiService;
     private final UserAccountRepository userAccountRepository;
     private final DeviceCertRepository deviceCertRepository;
     private final CAService caService;
+    private final CertificateSessionService certificateSessionService;
 
     @Value("${portone.api-secret}")
     private String portoneApiSecret;
@@ -37,14 +39,16 @@ public class PkiController {
     private String portoneBaseUrl;
 
     // 생성자 주입
-    public PkiController(PkiService pkiService, 
-                         UserAccountRepository userAccountRepository, 
+    public PkiController(PkiService pkiService,
+                         UserAccountRepository userAccountRepository,
                          DeviceCertRepository deviceCertRepository,
-                         CAService caService) {
+                         CAService caService,
+                         CertificateSessionService certificateSessionService) {
         this.pkiService = pkiService;
         this.userAccountRepository = userAccountRepository;
         this.deviceCertRepository = deviceCertRepository;
         this.caService = caService;
+        this.certificateSessionService = certificateSessionService;
     }
 
     /**
@@ -136,17 +140,28 @@ public class PkiController {
             // ------------------------------------------
 
             // 1. UserAccount 처리
-            UserAccount userAccount = userAccountRepository.findById(email).orElse(new UserAccount());
+            UserAccount userAccount = userAccountRepository.findById(email).orElse(null);
+            boolean isNewUser = (userAccount == null);
+
+            if (isNewUser) {
+                // 신규 가입은 닉네임이 반드시 필요함. 재발급 요청(닉네임 빈 값)이
+                // 미가입 이메일로 들어오면 NOT NULL 위반 대신 명확한 에러로 안내.
+                if (nickname == null || nickname.trim().isEmpty()) {
+                    throw new RuntimeException("가입되지 않은 계정입니다. 회원가입을 먼저 진행해주세요.");
+                }
+                userAccount = new UserAccount();
+            }
+
             userAccount.setEmail(email);
             userAccount.setPassword(password);
-            
+
             if (nickname != null && !nickname.trim().isEmpty()) {
                 userAccount.setNickname(nickname);
             }
             if (request.get("role") != null && !request.get("role").trim().isEmpty()) {
                 userAccount.setRole(role);
             }
-            
+
             userAccountRepository.saveAndFlush(userAccount);
 
             // 2. 인증서 직접 발급 (HTTP 대신 caService를 로컬 호출)
@@ -264,6 +279,9 @@ public class PkiController {
                 session.setAttribute("userId", user.getEmail());
                 session.setAttribute("nickname", user.getNickname());
                 session.setAttribute("role", user.getRole());
+
+                // 로그인 성공 시 인증서 유효 타이머(기본 10분) 시작
+                certificateSessionService.startSession(user.getEmail());
 
                 response.put("success", true);
                 response.put("nickname", user.getNickname());
