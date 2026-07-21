@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Flame, TrendingUp, Clock, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -10,12 +10,53 @@ const HomePage = () => {
   const handleProductClick = (product) => {
     navigate('/payment', { state: { product } });
   };
-  const productList = [
-    { id: 1, title: '명품 Java Programming (개정 4판)', major: '컴퓨터소프트웨어', author: '황기태, 김효수', current: 8, target: 10, originalPrice: '33,000', price: '24,000원', dDay: 'D-5', progress: 80, thumbnail: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600&auto=format&fit=crop' },
-    { id: 2, title: '쉽게 배우는 스프링 부트 3 웹 프로그래밍', major: '컴퓨터소프트웨어', author: '구멍가게 코딩단', current: 4, target: 5, originalPrice: '29,000', price: '21,000원', dDay: 'D-5', progress: 80, thumbnail: 'https://images.unsplash.com/photo-1555662800-82a8747209e7?q=80&w=600&auto=format&fit=crop' },
-    { id: 3, title: 'Do it! 리액트 모던 웹 개발', major: '컴퓨터소프트웨어', author: '박성호', current: 12, target: 20, originalPrice: '35,000', price: '26,000원', dDay: 'D-1', progress: 60, thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=600&auto=format&fit=crop' },
-    { id: 4, title: '알고리즘 문제 해결 전략 (인사이트)', major: '정보통신', author: '구종만', current: 2, target: 10, originalPrice: '50,000', price: '38,000원', dDay: 'D-7', progress: 20, thumbnail: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=600&auto=format&fit=crop' },
-  ];
+  const [productList, setProductList] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/products');
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+        const data = await response.json();
+
+        // 데이터 매핑
+        const mappedData = data.map(item => {
+          // 진행률 계산
+          const target = item.targetCount || 1; // 0으로 나누기 방지
+          const progress = Math.min((item.currentCount / target) * 100, 100);
+
+          // D-Day 계산
+          const deadlineDate = new Date(item.deadline);
+          const now = new Date();
+          const diffTime = deadlineDate - now;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          const dDayStr = diffDays > 0 ? `D-${diffDays}` : (diffDays === 0 ? 'D-Day' : '마감');
+
+          return {
+            id: item.productId,
+            title: item.title,
+            major: item.type === 'BOOK' ? '전공서적' : '기타',
+            author: item.author || '저자 미상',
+            current: item.currentCount,
+            target: item.targetCount,
+            originalPrice: item.originalPrice ? Number(item.originalPrice).toLocaleString() : Number(item.price).toLocaleString(),
+            price: `${Number(item.price).toLocaleString()}원`,
+            dDay: dDayStr,
+            progress: progress,
+            thumbnail: item.imageUrl || null
+          };
+        });
+
+        setProductList(mappedData);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -39,34 +80,38 @@ const HomePage = () => {
 
       {/* 🚀 2. 본문 영역 (마진을 음수로 주어 배너 위로 겹치게 배치) */}
       <main className="flex-grow max-w-7xl w-full mx-auto px-6 md:px-8 pb-20 flex flex-col gap-16 -mt-10 relative z-10">
-        
+
         {/* 🔍 플로팅 통합 검색창 (배너와 본문 사이에 반쯤 걸쳐지는 입체적인 디자인) */}
         <div className="w-full max-w-4xl mx-auto bg-white p-2 rounded-2xl md:rounded-[24px] shadow-xl shadow-blue-900/5 border border-gray-100 flex items-center transition-all hover:shadow-2xl hover:shadow-blue-900/10">
           <div className="pl-4 md:pl-6 pointer-events-none">
             <Search className="text-gray-400" size={24} />
           </div>
-          <input 
-            type="text" 
-            placeholder="이번 학기 필요한 전공책, 저자, 출판사를 검색해보세요!" 
+          <input
+            type="text"
+            placeholder="이번 학기 필요한 전공책, 저자, 출판사를 검색해보세요!"
             className="flex-grow pl-3 md:pl-4 pr-4 py-3 md:py-4 bg-transparent border-none text-sm md:text-base font-semibold outline-none w-full text-gray-900 placeholder-gray-400"
           />
           <Link to="/buyer/products" className="px-6 md:px-10 py-3 md:py-4 bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base font-bold rounded-xl md:rounded-[18px] transition whitespace-nowrap">
             검색
           </Link>
-        </div> 
-        
+        </div>
+
         {/* 🔥 섹션 1: 마감 임박 큐레이션 */}
         <section className="flex flex-col gap-6 mt-4">
           <div className="flex items-center gap-2">
             <Flame className="text-red-500" size={28} />
             <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">곧 출발해요! 마감 임박 공구</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {productList.map((item) => (
               <Link key={item.id} to={`/buyer/products/${item.id}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
                 <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
-                  <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  {item.thumbnail ? (
+                    <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <span className="text-gray-400 text-sm font-semibold">이미지 없음</span>
+                  )}
                   <span className="absolute top-3 left-3 text-[11px] font-black px-2.5 py-1 rounded-md shadow-sm z-10 bg-red-500 text-white">
                     {item.dDay}
                   </span>
@@ -106,10 +151,10 @@ const HomePage = () => {
             <TrendingUp className="text-blue-500" size={28} />
             <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">실시간 인기 탑승 공구</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-             {/* 현재는 위의 productList를 그대로 재사용하거나, 나중에 다른 API 데이터를 연결하시면 됩니다. */}
-             {productList.map((item) => (
+            {/* 현재는 위의 productList를 그대로 재사용하거나, 나중에 다른 API 데이터를 연결하시면 됩니다. */}
+            {productList.map((item) => (
               <div key={`popular-${item.id}`} onClick={() => handleProductClick(item)} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
                 <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
                   <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
