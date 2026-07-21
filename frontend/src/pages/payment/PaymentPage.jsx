@@ -25,11 +25,20 @@ const PaymentPage = () => {
   }
 
   const handlePayment = async () => {
-    const amount = parseInt(product.price.replace(/[^0-9]/g, ''), 10);
-    const orderId = `order_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
-    const toss = window.TossPayments(TOSS_CLIENT_KEY);
     try {
+      // 결제창을 열기 전에 서버가 실제 가격을 확인하고 PENDING 기록을 남긴다.
+      const prepareRes = await fetch('http://localhost:8080/api/payment/prepare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: Number(product.id), buyerName: '유한대학교 학우님' }),
+      });
+      if (!prepareRes.ok) {
+        const err = await prepareRes.json().catch(() => ({}));
+        throw new Error(err.message || '결제 준비에 실패했습니다.');
+      }
+      const { orderId, amount } = await prepareRes.json();
+
+      const toss = window.TossPayments(TOSS_CLIENT_KEY);
       await toss.requestPayment('카드', {
         amount,
         orderId,

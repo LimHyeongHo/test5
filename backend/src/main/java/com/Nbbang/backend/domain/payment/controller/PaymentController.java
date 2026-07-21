@@ -1,5 +1,7 @@
 package com.Nbbang.backend.domain.payment.controller;
 
+import com.Nbbang.backend.domain.payment.dto.PaymentPrepareRequest;
+import com.Nbbang.backend.domain.payment.dto.PaymentPrepareResponse;
 import com.Nbbang.backend.domain.payment.dto.PaymentRequest;
 import com.Nbbang.backend.domain.payment.dto.PaymentResponse;
 import com.Nbbang.backend.domain.payment.service.PaymentService;
@@ -16,12 +18,20 @@ import java.nio.charset.StandardCharsets;
 @RestController
 @RequestMapping("/api/payment")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000")
 public class PaymentController {
 
     private final PaymentService paymentService;
 
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
+
+    // 결제 준비: Toss 결제창을 열기 전에 서버가 가격을 검증하고 PENDING 기록을 남긴다.
+    @PostMapping("/prepare")
+    public ResponseEntity<PaymentPrepareResponse> preparePayment(@RequestBody PaymentPrepareRequest request) {
+        PaymentPrepareResponse response = paymentService.prepare(request);
+        return ResponseEntity.ok(response);
+    }
 
     // 토스페이먼츠 결제 승인
     @PostMapping("/confirm")
@@ -40,11 +50,7 @@ public class PaymentController {
             HttpServletResponse response) throws IOException {
 
         try {
-            PaymentRequest request = new PaymentRequest();
-            request.setPaymentKey(paymentKey);
-            request.setOrderId(orderId);
-            request.setAmount(amount);
-            PaymentResponse result = paymentService.confirmPayment(request);
+            PaymentResponse result = paymentService.processSuccessCallback(orderId, paymentKey, amount);
 
             response.sendRedirect(frontendUrl + "/payment/success"
                     + "?amount=" + amount

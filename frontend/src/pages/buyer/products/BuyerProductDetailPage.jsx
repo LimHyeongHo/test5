@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+//아래 import문 삭제
+// import { useParams, Link } from 'react-router-dom';
 import { Clock, Users, BookOpen, ChevronLeft, CheckCircle, Share2, AlertCircle, MessageCircle } from 'lucide-react';
 import Header from '../../../components/layout/Header';
-
+//[추가]
+import {useParams, Link, useNavigate } from 'react-router-dom';
 const BuyerProductDetailPage = () => {
   // 1. 주소창에서 상품 고유 ID 추출 (예: /buyer/products/1 -> id = "1")
   const { id } = useParams();
-  
+  //[추가]
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [isJoined, setIsJoined] = useState(false); // 테스트용: 공구 참여 상태 토글
 
@@ -56,21 +59,10 @@ const BuyerProductDetailPage = () => {
     
     try {
       if (!isJoined) {
-        // 백엔드 API 연동: 참여 인원 증가 및 참여자 이름 전달
-        const res = await fetch(`http://localhost:8080/api/products/${product.id}/join`, { 
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ buyerName: '유한대학교 학우님' })
-        });
-        if (!res.ok) throw new Error("참여 처리 실패");
-        const updatedProduct = await res.json();
-        
-        // 서버에서 받은 최신 인원으로 화면 업데이트
-        setProduct(prev => ({ ...prev, currentCount: updatedProduct.currentCount }));
-        setIsJoined(true);
-        alert('🎉 공동구매(N빵) 탑승 완료! 공구 달성 시 알림을 보내드립니다.');
+        //[추가] 참여 처리는 결제 성공 후 백엔드가 대신 해줌 — 여기선 결제 페이지로 이동만
+        //이전에 있던 if문 안 쪽은 전부 삭제함. else문은 그대로
+        navigate('/payment', { state: { product } });
+
       } else {
         // 백엔드 API 연동: 참여 인원 감소 (취소)
         const res = await fetch(`http://localhost:8080/api/products/${product.id}/cancel`, { method: 'POST' });
