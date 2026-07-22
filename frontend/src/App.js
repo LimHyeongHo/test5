@@ -4,6 +4,8 @@ import './App.css';
 
 /// [신규] 인증서 만료 타이머(헤더 +5분/-5분, 00:00 만료 로그아웃) 전역 상태 Provider
 import { CertificateTimerProvider } from './contexts/CertificateTimerContext';
+/// [신규] 비로그인 시 URL 직접 접근 막는 라우트 가드
+import PrivateRoute from './components/PrivateRoute';
 
 import LoginPage from './pages/login/LoginPage';
 import SignupPage from './pages/signup/SignupPage';
@@ -100,8 +102,9 @@ function App() {
 
         { /* ----------------공용 페이지(채팅 등)-----------------*/}
         { /* 판매자, 구매자 영역 채팅 페이지 */}
-        <Route path="/seller/chat" element={<SharedChatPage userRole="SELLER" />} />
-        <Route path="/buyer/chat" element={<SharedChatPage userRole="BUYER" />} />
+        { /* [수정] 비로그인 URL 직접 접근 차단을 위해 PrivateRoute로 감쌈 */}
+        <Route path="/seller/chat" element={<PrivateRoute><SharedChatPage userRole="SELLER" /></PrivateRoute>} />
+        <Route path="/buyer/chat" element={<PrivateRoute><SharedChatPage userRole="BUYER" /></PrivateRoute>} />
         
         {/* ---------------- 구매자 마이페이지 ---------------- */}
         <Route path="/buyer/mypage" element={<SharedMyPageLayout userRole="BUYER" />}>

@@ -49,6 +49,14 @@ const Header = () => {
 
   const myPagePath = userRole === 'ROLE_SELLER' ? '/seller/mypage' : userRole === 'ROLE_ADMIN' ? '/admin/dashboard' : '/buyer/mypage';
 
+  // [신규] 헤더 채팅 링크 클릭 시 비로그인이면 이동 막고 alert만 표시 (URL 직접 입력 접근은 미차단, PrivateRoute에서 별도 처리 예정)
+  const handleChatClick = (e) => {
+    if (!localStorage.getItem('user_nickname')) {
+      e.preventDefault();
+      alert('로그인이 필요합니다');
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 w-full h-16 flex items-center justify-between">
 
@@ -76,7 +84,8 @@ const Header = () => {
               <Link to="/seller/products" className="hover:text-gray-950 transition">물품 등록</Link>
               <Link to="/seller/status" className="hover:text-gray-950 transition">판매 현황</Link>
               <Link to="/seller/analytics" className="hover:text-gray-950 transition">분석 데이터</Link>
-              <Link to="/seller/chat" className="hover:text-gray-950 transition">채팅</Link>
+              {/* [수정] onClick 추가 — 비로그인 시 handleChatClick이 이동 막고 alert 표시 */}
+              <Link to="/seller/chat" className="hover:text-gray-950 transition" onClick={handleChatClick}>채팅</Link>
             </>
           )}
 
@@ -84,7 +93,8 @@ const Header = () => {
             <>
               <Link to="/" className="hover:text-gray-950 transition">홈</Link>
               <Link to="/buyer/products" className="hover:text-gray-950 transition">공구 찾기</Link>
-              <Link to="/buyer/chat" className="hover:text-gray-950 transition">채팅</Link>
+              {/* [수정] onClick 추가 — 비로그인 시 handleChatClick이 이동 막고 alert 표시 */}
+              <Link to="/buyer/chat" className="hover:text-gray-950 transition" onClick={handleChatClick}>채팅</Link>
             </>
           )}
         </nav>
