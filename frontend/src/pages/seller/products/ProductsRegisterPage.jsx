@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, PlusCircle, BookOpen, Package, DollarSign, Users, FileText, Upload, AlertCircle, X } from 'lucide-react';
+import { Store, PlusCircle, BookOpen, Package, DollarSign, Users, FileText, Upload, AlertCircle, X, Search } from 'lucide-react';
 import Header from '../../../components/layout/Header';
 
 const ProductRegisterPage = () => {
@@ -8,6 +8,52 @@ const ProductRegisterPage = () => {
 
   // 1. 등록 유형 상태 관리 ('BOOK' 또는 'ITEM')
   const [productType, setProductType] = useState('BOOK');
+
+  // [신규] 바코드 관련 상태 및 감지 로직
+  const [barcode, setBarcode] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleBarcodeKeyDown = async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); 
+      if (!barcode.trim()) return;
+      
+      setIsSearching(true);
+      try {
+        const response = await fetch(`http://localhost:8080/api/search/product?query=${barcode}&type=${productType}`);
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({
+            ...prev,
+            title: data.title || prev.title,
+            publisher: data.brand || data.maker || data.mallName || prev.publisher,
+            author: data.author || prev.author,
+            imageUrl: data.image || prev.imageUrl,
+          }));
+          if (data.image) {
+            setImagePreview(data.image); // 검색된 이미지를 미리보기 화면에 띄움
+          }
+          alert("바코드 검색 완료! 항목이 자동으로 채워졌습니다.");
+        } else {
+          try {
+            const errorData = await response.json();
+            if (errorData.error) {
+              alert(errorData.error);
+            } else {
+              alert("상품을 찾을 수 없습니다. 직접 입력해 주세요.");
+            }
+          } catch(e) {
+            alert("상품을 찾을 수 없습니다. 직접 입력해 주세요.");
+          }
+        }
+      } catch(error) {
+        alert("검색 중 오류가 발생했습니다. 백엔드 서버를 확인해 주세요.");
+      } finally {
+        setIsSearching(false);
+        setBarcode(''); 
+      }
+    }
+  };
 
   // 2. 입력 데이터 상태 관리
   const [formData, setFormData] = useState({
@@ -17,6 +63,7 @@ const ProductRegisterPage = () => {
     price: '',
     targetCount: '',
     description: '',
+    imageUrl: '',     // [신규] 네이버 등에서 가져온 외부 이미지 URL 저장용
   });
   // 2-1. 이미지 업로드용 함수
   const [imageFile, setImageFile] = useState(null);
@@ -53,7 +100,9 @@ const ProductRegisterPage = () => {
       price: '',
       targetCount: '',
       description: '',
+      imageUrl: '',
     });
+    setImagePreview(null); // 유형 변경 시 이미지 미리보기도 초기화
   };
 
   const handleSubmit = async (e) => {
@@ -70,6 +119,7 @@ const ProductRegisterPage = () => {
     submitData.append('price', formData.price);
     submitData.append('targetCount', formData.targetCount);
     submitData.append('description', formData.description);
+    if (formData.imageUrl) submitData.append('imageUrl', formData.imageUrl); // URL 이미지 추가
 
     if (productType === 'BOOK') {
       submitData.append('author', formData.author);
@@ -150,6 +200,32 @@ const ProductRegisterPage = () => {
               {productType === 'BOOK' ? <BookOpen size={20} className="text-blue-600" /> : <Package size={20} className="text-blue-600" />}
               {productType === 'BOOK' ? '도서 기본 정보' : '물품 기본 정보'}
             </h3>
+
+            {/* [신규] 바코드 스캔 영역 */}
+            <div className="flex flex-col gap-1.5 mb-2 bg-blue-50 p-4 rounded-xl border border-blue-100">
+              <label htmlFor="barcode" className="text-sm font-bold text-blue-800 flex items-center gap-2">
+                <Search size={16} /> 바코드 스캔 (또는 직접 입력 후 검색)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text" id="barcode"
+                  value={barcode} 
+                  onChange={(e) => setBarcode(e.target.value)}
+                  onKeyDown={handleBarcodeKeyDown}
+                  placeholder="스캐너로 찍거나, 직접 상품명 입력 후 우측 검색 버튼 클릭"
+                  className="flex-grow p-3.5 rounded-xl border border-blue-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none transition text-base font-bold text-gray-900"
+                  disabled={isSearching}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleBarcodeKeyDown({ key: 'Enter', preventDefault: () => {} })}
+                  disabled={isSearching}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-bold transition whitespace-nowrap"
+                >
+                  {isSearching ? '검색 중...' : '검색'}
+                </button>
+              </div>
+            </div>
 
             {/* 제목/물품명 */}
             <div className="flex flex-col gap-1.5">
