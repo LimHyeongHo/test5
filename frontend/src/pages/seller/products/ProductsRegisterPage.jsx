@@ -25,16 +25,30 @@ const ProductRegisterPage = () => {
           const data = await response.json();
           setFormData(prev => ({
             ...prev,
-            title: data.title || prev.title,
-            publisher: data.brand || data.maker || data.mallName || prev.publisher,
-            author: data.author || prev.author,
-            imageUrl: data.image || prev.imageUrl,
+            title: data.title || '',
+            publisher: data.brand || data.maker || data.mallName || '',
+            author: data.author || '',
+            imageUrl: data.image || '',
+            price: data.price || '',
+            description: data.description || '',
           }));
           if (data.image) {
             setImagePreview(data.image); // 검색된 이미지를 미리보기 화면에 띄움
+          } else {
+            setImagePreview(null);
           }
-          alert("바코드 검색 완료! 항목이 자동으로 채워졌습니다.");
+          alert("바코드 검색 완료! 항목이 새로 채워졌습니다.");
         } else {
+          // 검색 실패 시 이전 데이터 싹 지우기
+          setFormData(prev => ({
+            ...prev,
+            title: '',
+            publisher: '',
+            author: '',
+            imageUrl: '',
+          }));
+          setImagePreview(null);
+          
           try {
             const errorData = await response.json();
             if (errorData.error) {
@@ -204,7 +218,7 @@ const ProductRegisterPage = () => {
             {/* [신규] 바코드 스캔 영역 */}
             <div className="flex flex-col gap-1.5 mb-2 bg-blue-50 p-4 rounded-xl border border-blue-100">
               <label htmlFor="barcode" className="text-sm font-bold text-blue-800 flex items-center gap-2">
-                <Search size={16} /> 바코드 스캔 (또는 직접 입력 후 검색)
+                <Search size={16} /> {productType === 'BOOK' ? '바코드 스캔 (또는 직접 입력 후 검색)' : '상품 이름 검색'}
               </label>
               <div className="flex gap-2">
                 <input
@@ -212,7 +226,7 @@ const ProductRegisterPage = () => {
                   value={barcode} 
                   onChange={(e) => setBarcode(e.target.value)}
                   onKeyDown={handleBarcodeKeyDown}
-                  placeholder="스캐너로 찍거나, 직접 상품명 입력 후 우측 검색 버튼 클릭"
+                  placeholder={productType === 'BOOK' ? "스캐너로 찍거나, 직접 상품명 입력 후 우측 검색 버튼 클릭" : "직접 상품명 입력 후 우측 검색 버튼 클릭"}
                   className="flex-grow p-3.5 rounded-xl border border-blue-200 bg-white focus:ring-2 focus:ring-blue-500 outline-none transition text-base font-bold text-gray-900"
                   disabled={isSearching}
                 />

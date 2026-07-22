@@ -43,11 +43,25 @@ public class AladinSearchService {
             Map<String, String> result = new HashMap<>();
             
             if (responseBody != null && responseBody.contains("\"item\"")) {
-                result.put("title", extractValue(responseBody, "title"));
-                result.put("author", extractValue(responseBody, "author"));
-                result.put("maker", extractValue(responseBody, "publisher"));
-                result.put("brand", ""); 
-                result.put("image", extractValue(responseBody, "cover"));
+                // 알라딘 응답 JSON의 최상단에도 "title": "알라딘 검색결과 - ..." 가 있어서, 
+                // 정규식이 실제 책 제목이 아닌 최상단 제목을 가져오는 버그가 있습니다.
+                // 따라서 "item" 배열 내부의 텍스트만 먼저 잘라낸 후 거기서 값을 추출합니다.
+                int itemIndex = responseBody.indexOf("\"item\"");
+                String itemContent = responseBody.substring(itemIndex);
+                
+                String title = extractValue(itemContent, "title");
+                
+                if (title.isEmpty() || title.startsWith("알라딘 검색결과")) {
+                    result.put("error", "해당 바코드(또는 검색어)로 알라딘에서 도서를 찾을 수 없습니다.");
+                } else {
+                    result.put("title", title);
+                    result.put("author", extractValue(itemContent, "author"));
+                    result.put("maker", extractValue(itemContent, "publisher"));
+                    result.put("brand", ""); 
+                    result.put("image", extractValue(itemContent, "cover"));
+                    result.put("description", extractValue(itemContent, "description"));
+                    result.put("price", extractValue(itemContent, "priceStandard"));
+                }
             } else {
                 result.put("error", "알라딘 API 결과가 없거나 오류 메시지입니다: " + responseBody);
             }
@@ -62,11 +76,16 @@ public class AladinSearchService {
 
     private String extractValue(String json, String key) {
         // 정규식으로 JSON 문자열에서 값을 추출합니다 (ObjectMapper 의존성 문제 회피)
-        String patternString = "\"" + key + "\"\\s*:\\s*\"(.*?)\"";
+        // 값에 따옴표가 있는 경우(문자열)와 없는 경우(숫자)를 모두 처리합니다.
+        String patternString = "\"" + key + "\"\\s*:\\s*(\"(.*?)\"|([^,\"}]+))";
         Pattern pattern = Pattern.compile(patternString);
         Matcher matcher = pattern.matcher(json);
         if (matcher.find()) {
-            return matcher.group(1).replace("\\\"", "\"").replace("\\\\", "\\");
+            if (matcher.group(2) != null) {
+                return matcher.group(2).replace("\\\"", "\"").replace("\\\\", "\\");
+            } else if (matcher.group(3) != null) {
+                return matcher.group(3).trim();
+            }
         }
         return "";
     }

@@ -44,6 +44,8 @@ public class NaverSearchService {
                     result.put("maker", item.get("maker") != null ? item.get("maker").toString() : "");
                     result.put("brand", item.get("brand") != null ? item.get("brand").toString() : "");
                     result.put("image", item.get("image") != null ? item.get("image").toString() : "");
+                    result.put("price", item.get("lprice") != null ? item.get("lprice").toString() : "");
+                    result.put("description", ""); // 네이버 쇼핑 OpenAPI는 상세 설명을 제공하지 않음
                 }
             }
             return result;
