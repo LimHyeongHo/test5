@@ -64,9 +64,8 @@ public class PaymentService {
     }
 
     public PaymentResponse confirmPayment(PaymentRequest request) {
-        // TODO: global/exception 병합 후 CustomException으로 교체
         if (request.getAmount() == null || request.getAmount() <= 0) {
-            throw new RuntimeException("결제 금액이 올바르지 않습니다");
+            throw new CustomException(ErrorCode.PAYMENT_INVALID_AMOUNT);
         }
 
         String encodedKey = Base64.getEncoder()
@@ -87,9 +86,9 @@ public class PaymentService {
                     .bodyToMono(PaymentResponse.class)
                     .block();
         } catch (WebClientResponseException e) {
-            throw new RuntimeException("결제 서버와 통신에 실패했습니다. 잠시 후 다시 시도해주세요");
+            throw new CustomException(ErrorCode.PAYMENT_CONFIRM_FAILED);
         } catch (Exception e) {
-            throw new RuntimeException("결제 승인에 실패했습니다. 잠시 후 다시 시도해주세요");
+            throw new CustomException(ErrorCode.PAYMENT_CONFIRM_FAILED);
         }
     }
 
@@ -97,7 +96,7 @@ public class PaymentService {
     @Transactional
     public PaymentResponse processSuccessCallback(String orderId, String paymentKey, Long amount) {
         Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("유효하지 않은 주문입니다"));
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_ORDER_NOT_FOUND));
 
         if ("DONE".equals(payment.getStatus())) {
             // 이미 처리된 콜백(중복 리다이렉트 등) - 재처리하지 않고 그대로 성공 응답
@@ -110,7 +109,7 @@ public class PaymentService {
         }
 
         if (!payment.getAmount().equals(amount)) {
-            throw new RuntimeException("결제 금액이 일치하지 않습니다");
+            throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
 
         PaymentRequest request = new PaymentRequest();
