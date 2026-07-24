@@ -20,14 +20,24 @@ const Header = () => {
   // [신규] 인증서 타이머 상태 (남은 초 / 조정 함수)
   const { remainingSeconds, extend } = useCertificateTimer();
 
-  useEffect(() => {
+  const syncFromStorage = () => {
     const storedNickname = localStorage.getItem('user_nickname');
     const storedRole = localStorage.getItem('user_role');
     if (storedNickname) setNickname(storedNickname);
     else setNickname('로그인 필요');
     if (storedRole) setUserRole(storedRole);
     else setUserRole('ROLE_BUYER');
+  };
+
+  useEffect(() => {
+    syncFromStorage();
   }, [location]);
+
+  // [신규] 같은 페이지에 머문 채(라우트 이동 없이) 닉네임 등이 바뀐 경우, 새로고침 없이 헤더에 즉시 반영
+  useEffect(() => {
+    window.addEventListener('user-profile-updated', syncFromStorage);
+    return () => window.removeEventListener('user-profile-updated', syncFromStorage);
+  }, []);
 
   const handleLogout = async () => {
     // [수정] 기존엔 localStorage만 지웠는데, 로그아웃 시 서버 인증서도 함께 폐기하도록 요청 추가

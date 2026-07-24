@@ -199,6 +199,14 @@ public class PkiController {
         }
     }
 
+    // PKI(개인키/서명) 없이 이메일+비밀번호만으로 로그인 가능한 테스트 전용 계정 목록.
+    // 실제 회원가입 계정은 이 목록에 없으므로 반드시 PKI 로그인을 거쳐야 함 (보안 우회 방지).
+    private static final java.util.Set<String> TEST_LOGIN_ACCOUNTS = java.util.Set.of(
+            "admin@naver.com",
+            "seller01@test.com", "seller02@test.com",
+            "buyer01@test.com", "buyer02@test.com"
+    );
+
     @PostMapping("/admin/login")
     public ResponseEntity<Map<String, Object>> adminLogin(@RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
         String email = request.get("email");
@@ -208,8 +216,8 @@ public class PkiController {
             UserAccount user = userAccountRepository.findById(email)
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 계정입니다."));
 
-            if (!"ROLE_ADMIN".equals(user.getRole())) {
-                throw new RuntimeException("관리자 계정이 아닙니다.");
+            if (!TEST_LOGIN_ACCOUNTS.contains(email)) {
+                throw new RuntimeException("테스트 전용 계정만 이 방식으로 로그인할 수 있습니다.");
             }
 
             if (!user.getPassword().equals(password)) {
@@ -228,7 +236,7 @@ public class PkiController {
             response.put("success", true);
             response.put("nickname", user.getNickname());
             response.put("role", user.getRole());
-            response.put("message", "관리자 로그인 성공!");
+            response.put("message", user.getNickname() + "님 테스트 로그인 성공!");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
