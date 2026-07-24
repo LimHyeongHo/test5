@@ -5,6 +5,7 @@ import com.Nbbang.backend.domain.payment.dto.PaymentPrepareResponse;
 import com.Nbbang.backend.domain.payment.dto.PaymentRequest;
 import com.Nbbang.backend.domain.payment.dto.PaymentResponse;
 import com.Nbbang.backend.domain.payment.service.PaymentService;
+import com.Nbbang.backend.global.exception.CustomException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,9 +59,12 @@ public class PaymentController {
                     + "&orderId=" + orderId
                     + "&method=" + URLEncoder.encode(
                             result.getMethod() != null ? result.getMethod() : "", StandardCharsets.UTF_8));
-        } catch (Exception e) {
+        } catch (CustomException e) {
             response.sendRedirect(frontendUrl + "/payment/fail?message="
                     + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            response.sendRedirect(frontendUrl + "/payment/fail?message="
+                    + URLEncoder.encode("결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요", StandardCharsets.UTF_8));
         }
     }
 
