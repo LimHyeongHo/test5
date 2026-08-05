@@ -8,8 +8,10 @@ const SellerDashboardPage = () => {
   const [participations, setParticipations] = useState([]);
 
   React.useEffect(() => {
+    const userId = localStorage.getItem('user_id') || '1';
+
     // 1. 내 판매 현황 목록 불러오기
-    fetch('http://localhost:8080/api/products/seller/1')
+    fetch(`http://localhost:8080/api/products/seller/${userId}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch products');
         return res.json();
@@ -28,7 +30,7 @@ const SellerDashboardPage = () => {
       .catch(err => console.error(err));
 
     // 2. 누군가 참여한 최근 내역 불러오기 (최근 알림용)
-    fetch('http://localhost:8080/api/products/seller/1/participations')
+    fetch(`http://localhost:8080/api/products/seller/${userId}/participations`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch participations');
         return res.json();
