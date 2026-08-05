@@ -44,6 +44,7 @@ const HomePage = () => {
             originalPrice: item.originalPrice ? Number(item.originalPrice).toLocaleString() : Number(item.price).toLocaleString(),
             price: `${Number(item.price).toLocaleString()}원`,
             dDay: dDayStr,
+            diffDays: diffDays,
             progress: progress,
             thumbnail: item.imageUrl || null
           };
@@ -57,6 +58,9 @@ const HomePage = () => {
 
     fetchProducts();
   }, []);
+
+  const urgentProducts = productList.filter(item => item.diffDays >= 0 && item.diffDays <= 5);
+  const popularProducts = productList.filter(item => item.current >= item.target * 0.5);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -104,14 +108,15 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {productList.map((item) => (
-              <Link key={item.id} to={`/buyer/products/${item.id}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
-                <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
-                  {item.thumbnail ? (
-                    <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <span className="text-gray-400 text-sm font-semibold">이미지 없음</span>
-                  )}
+            {urgentProducts.length > 0 ? (
+              urgentProducts.map((item) => (
+                <Link key={item.id} to={`/buyer/products/${item.id}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
+                  <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
+                    {item.thumbnail ? (
+                      <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <span className="text-gray-400 text-sm font-semibold">이미지 없음</span>
+                    )}
                   <span className="absolute top-3 left-3 text-[11px] font-black px-2.5 py-1 rounded-md shadow-sm z-10 bg-red-500 text-white">
                     {item.dDay}
                   </span>
@@ -139,9 +144,14 @@ const HomePage = () => {
                       <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${item.progress}%` }}></div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-full py-10 text-center text-gray-500 font-semibold bg-white rounded-[24px] border border-gray-200 border-dashed">
+                마감 임박인 프로젝트가 없습니다.
+              </div>
+            )}
           </div>
         </section>
 
@@ -153,11 +163,11 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* 현재는 위의 productList를 그대로 재사용하거나, 나중에 다른 API 데이터를 연결하시면 됩니다. */}
-            {productList.map((item) => (
-              <div key={`popular-${item.id}`} onClick={() => handleProductClick(item)} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
-                <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
-                  <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            {popularProducts.length > 0 ? (
+              popularProducts.map((item) => (
+                <div key={`popular-${item.id}`} onClick={() => handleProductClick(item)} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
+                  <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
+                    <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   {/* 인기 공구는 빨간 D-Day 대신 파란색 '모집 중' 뱃지로 변경 가능 */}
                   <span className="absolute top-3 left-3 text-[11px] font-black px-2.5 py-1 rounded-md shadow-sm z-10 bg-blue-500 text-white">
                     모집 중
@@ -187,8 +197,13 @@ const HomePage = () => {
                     </div>
                   </div>
                 </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full py-10 text-center text-gray-500 font-semibold bg-white rounded-[24px] border border-gray-200 border-dashed">
+                진행률 50% 이상인 인기 프로젝트가 없습니다.
               </div>
-            ))}
+            )}
           </div>
         </section>
 
