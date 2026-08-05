@@ -7,9 +7,7 @@ import Header from '../../components/layout/Header';
 const HomePage = () => {
   const navigate = useNavigate();
 
-  const handleProductClick = (product) => {
-    navigate('/payment', { state: { product } });
-  };
+  // 팀원이 수정한 버그 픽스 적용 (handleProductClick 제거됨)
   const [productList, setProductList] = useState([]);
 
   useEffect(() => {
@@ -165,7 +163,7 @@ const HomePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {popularProducts.length > 0 ? (
               popularProducts.map((item) => (
-                <div key={`popular-${item.id}`} onClick={() => handleProductClick(item)} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
+                <Link key={`popular-${item.id}`} to={`/buyer/products/${item.id}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
                   <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
                     <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   {/* 인기 공구는 빨간 D-Day 대신 파란색 '모집 중' 뱃지로 변경 가능 */}
@@ -197,7 +195,7 @@ const HomePage = () => {
                     </div>
                   </div>
                 </div>
-                </div>
+                </Link>
               ))
             ) : (
               <div className="col-span-full py-10 text-center text-gray-500 font-semibold bg-white rounded-[24px] border border-gray-200 border-dashed">
