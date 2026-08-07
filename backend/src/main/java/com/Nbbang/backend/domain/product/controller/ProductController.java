@@ -3,6 +3,8 @@ package com.Nbbang.backend.domain.product.controller; // 🚨 본인 경로에 �
 import com.Nbbang.backend.domain.product.entity.Participation;
 import com.Nbbang.backend.domain.product.entity.Product;
 import com.Nbbang.backend.domain.product.service.ProductService;
+import com.Nbbang.backend.global.exception.CustomException;
+import com.Nbbang.backend.global.exception.ErrorCode;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -76,5 +78,25 @@ public class ProductController {
             )
         ).toList();
         return ResponseEntity.ok(response);
+    }
+
+    /** [신규] 로그인한 판매자 본인의 상품 목록 (sellerId 대신 sellerEmail 기준) */
+    @GetMapping("/seller/me")
+    public ResponseEntity<List<Product>> getMyProducts(HttpSession session) {
+        List<Product> products = productService.getProductsBySellerEmail(getEmail(session));
+        return ResponseEntity.ok(products);
+    }
+
+    /** [신규] 로그인한 판매자 본인 상품에 대한 최근 참여자 내역 */
+    @GetMapping("/seller/me/participations")
+    public ResponseEntity<List<Map<String, Object>>> getMyParticipations(HttpSession session) {
+        return ResponseEntity.ok(productService.getParticipationsBySellerEmail(getEmail(session)));
+    }
+
+    /** 세션에서 userId(email) 추출 — 로그인 안 된 경우 401 */
+    private String getEmail(HttpSession session) {
+        String userId = (String) session.getAttribute("userId");
+        if (userId == null) throw new CustomException(ErrorCode.AUTH_UNAUTHORIZED);
+        return userId;
     }
 }
