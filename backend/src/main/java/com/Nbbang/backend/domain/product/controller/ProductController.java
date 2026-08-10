@@ -89,6 +89,20 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(
+            @PathVariable Long id,
+            @ModelAttribute Product product,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
+        Product updatedProduct = productService.updateProduct(id, product, image);
+        return ResponseEntity.ok(updatedProduct);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
     /** [신규] 로그인한 판매자 본인의 상품 목록 (sellerId 대신 sellerEmail 기준) */
     @GetMapping("/seller/me")
     public ResponseEntity<List<Product>> getMyProducts(HttpSession session) {

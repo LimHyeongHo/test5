@@ -4,10 +4,9 @@ import { Link } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 
 const HomePage = () => {
-  // ▼▼▼ 수정 시작: 상품 카드 클릭 시 상세 페이지를 건너뛰고 /payment로 바로 이동하던 버그 수정
-  // (기존 handleProductClick + navigate('/payment', ...) 제거, 아래 "인기 공구" 섹션을
-  //  1번 섹션과 동일하게 <Link to={`/buyer/products/${item.id}`}>로 변경)
-  // ▲▲▲ 수정 끝
+  const navigate = useNavigate();
+
+  // 팀원이 수정한 버그 픽스 적용 (handleProductClick 제거됨)
   const [productList, setProductList] = useState([]);
 
   useEffect(() => {
@@ -42,6 +41,7 @@ const HomePage = () => {
             originalPrice: item.originalPrice ? Number(item.originalPrice).toLocaleString() : Number(item.price).toLocaleString(),
             price: `${Number(item.price).toLocaleString()}원`,
             dDay: dDayStr,
+            diffDays: diffDays,
             progress: progress,
             thumbnail: item.imageUrl || null
           };
@@ -55,6 +55,9 @@ const HomePage = () => {
 
     fetchProducts();
   }, []);
+
+  const urgentProducts = productList.filter(item => item.diffDays >= 0 && item.diffDays <= 5);
+  const popularProducts = productList.filter(item => item.current >= item.target * 0.5);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -102,14 +105,15 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {productList.map((item) => (
-              <Link key={item.id} to={`/buyer/products/${item.id}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
-                <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
-                  {item.thumbnail ? (
-                    <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <span className="text-gray-400 text-sm font-semibold">이미지 없음</span>
-                  )}
+            {urgentProducts.length > 0 ? (
+              urgentProducts.map((item) => (
+                <Link key={item.id} to={`/buyer/products/${item.id}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
+                  <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
+                    {item.thumbnail ? (
+                      <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <span className="text-gray-400 text-sm font-semibold">이미지 없음</span>
+                    )}
                   <span className="absolute top-3 left-3 text-[11px] font-black px-2.5 py-1 rounded-md shadow-sm z-10 bg-red-500 text-white">
                     {item.dDay}
                   </span>
@@ -137,9 +141,14 @@ const HomePage = () => {
                       <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${item.progress}%` }}></div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-full py-10 text-center text-gray-500 font-semibold bg-white rounded-[24px] border border-gray-200 border-dashed">
+                마감 임박인 프로젝트가 없습니다.
+              </div>
+            )}
           </div>
         </section>
 
@@ -151,12 +160,11 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* 현재는 위의 productList를 그대로 재사용하거나, 나중에 다른 API 데이터를 연결하시면 됩니다. */}
-            {/* ▼▼▼ 수정 시작: onClick으로 /payment 바로 이동하던 것을, 1번 섹션과 동일하게 상세 페이지로 이동하도록 변경 */}
-            {productList.map((item) => (
-              <Link key={`popular-${item.id}`} to={`/buyer/products/${item.id}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
-                <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
-                  <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            {popularProducts.length > 0 ? (
+              popularProducts.map((item) => (
+                <Link key={`popular-${item.id}`} to={`/buyer/products/${item.id}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-xl transition-all cursor-pointer group overflow-hidden">
+                  <div className="w-full h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
+                    <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   {/* 인기 공구는 빨간 D-Day 대신 파란색 '모집 중' 뱃지로 변경 가능 */}
                   <span className="absolute top-3 left-3 text-[11px] font-black px-2.5 py-1 rounded-md shadow-sm z-10 bg-blue-500 text-white">
                     모집 중
@@ -186,9 +194,13 @@ const HomePage = () => {
                     </div>
                   </div>
                 </div>
-              </Link>
-            ))}
-            {/* ▲▲▲ 수정 끝 */}
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-full py-10 text-center text-gray-500 font-semibold bg-white rounded-[24px] border border-gray-200 border-dashed">
+                진행률 50% 이상인 인기 프로젝트가 없습니다.
+              </div>
+            )}
           </div>
         </section>
 

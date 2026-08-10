@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Store, BookOpen, Package, Search, Filter, Edit2, Trash2, CheckCircle, Clock, ExternalLink } from 'lucide-react';
 import Header from '../../../components/layout/Header';
 
 const SellerProductsPage = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
 
   React.useEffect(() => {
@@ -23,7 +25,36 @@ const SellerProductsPage = () => {
         setProducts(formattedData);
       })
       .catch(err => console.error("상품 목록 로드 실패:", err));
+  };
+
+  React.useEffect(() => {
+    fetchProducts();
   }, []);
+
+  const handleDelete = async (id, currentCount) => {
+    if (currentCount > 0) {
+      const confirmFirst = window.confirm(`현재 참여자가 ${currentCount}명 있습니다. 정말 삭제하시겠습니까?`);
+      if (!confirmFirst) return;
+    }
+    
+    const confirmDelete = window.confirm("프로젝트를 삭제하면 복구할 수 없으며 참여 내역도 함께 삭제됩니다. 계속하시겠습니까?");
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/products/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        alert("성공적으로 삭제되었습니다.");
+        fetchProducts(); // 리스트 갱신
+      } else {
+        alert("삭제에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("삭제 중 오류 발생:", error);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
   
   // 1. 상태 관리 (탭, 필터, 필터창 열림/닫힘)
   const [activeTab, setActiveTab] = useState('ALL'); 
@@ -166,9 +197,9 @@ const SellerProductsPage = () => {
                     </div>
                   </div>
                   <div className="md:col-span-2 flex items-center gap-2 justify-start md:justify-end border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
-                    <button className="flex items-center justify-center p-2.5 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-xl hover:bg-blue-50 transition"><ExternalLink size={18} /></button>
-                    <button className="flex items-center justify-center p-2.5 text-gray-400 hover:text-gray-700 bg-gray-50 rounded-xl hover:bg-gray-200 transition"><Edit2 size={18} /></button>
-                    <button className="flex items-center justify-center p-2.5 text-red-400 hover:text-red-600 bg-red-50/50 rounded-xl hover:bg-red-50 transition"><Trash2 size={18} /></button>
+                    <button onClick={() => navigate(`/buyer/products/${item.id}`)} className="flex items-center justify-center p-2.5 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-xl hover:bg-blue-50 transition"><ExternalLink size={18} /></button>
+                    <button onClick={() => navigate(`/seller/products/edit/${item.id}`)} className="flex items-center justify-center p-2.5 text-gray-400 hover:text-gray-700 bg-gray-50 rounded-xl hover:bg-gray-200 transition"><Edit2 size={18} /></button>
+                    <button onClick={() => handleDelete(item.id, item.currentCount)} className="flex items-center justify-center p-2.5 text-red-400 hover:text-red-600 bg-red-50/50 rounded-xl hover:bg-red-50 transition"><Trash2 size={18} /></button>
                   </div>
                 </div>
               );
