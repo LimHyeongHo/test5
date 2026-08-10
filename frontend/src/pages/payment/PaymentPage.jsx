@@ -32,7 +32,7 @@ const PaymentPage = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ productId: Number(product.id), buyerName: '유한대학교 학우님' }),
+        body: JSON.stringify({ productId: Number(product.id) }),
       });
       if (prepareRes.status === 401) {
         alert('로그인이 필요합니다.');
@@ -41,6 +41,7 @@ const PaymentPage = () => {
       }
       if (!prepareRes.ok) {
         const err = await prepareRes.json().catch(() => ({}));
+        if (prepareRes.status === 401) throw new Error('로그인이 필요합니다.');
         throw new Error(err.message || '결제 준비에 실패했습니다.');
       }
       const { orderId, amount } = await prepareRes.json();
