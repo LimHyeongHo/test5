@@ -223,6 +223,7 @@ const LoginPage = () => {
         await syncStatus();
         alert(`${result.nickname}님 환영합니다!`);
         navigate('/');
+        return;
       } else {
         const message = result.message || "로그인에 실패했습니다.";
         // 기기 인증서가 없거나 폐기/서명 불일치인 경우도 재발급 대상.

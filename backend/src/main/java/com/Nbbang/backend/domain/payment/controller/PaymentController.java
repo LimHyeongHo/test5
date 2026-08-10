@@ -6,7 +6,10 @@ import com.Nbbang.backend.domain.payment.dto.PaymentRequest;
 import com.Nbbang.backend.domain.payment.dto.PaymentResponse;
 import com.Nbbang.backend.domain.payment.service.PaymentService;
 import com.Nbbang.backend.global.exception.CustomException;
+import com.Nbbang.backend.global.exception.ErrorCode;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -28,15 +31,27 @@ public class PaymentController {
     private String frontendUrl;
 
     // 결제 준비: Toss 결제창을 열기 전에 서버가 가격을 검증하고 PENDING 기록을 남긴다.
+    // 로그인 세션이 있어야만 진행 가능 (참여자 계정을 클라이언트 입력이 아닌 세션 기준으로 기록하기 위함).
     @PostMapping("/prepare")
-    public ResponseEntity<PaymentPrepareResponse> preparePayment(@RequestBody PaymentPrepareRequest request) {
-        PaymentPrepareResponse response = paymentService.prepare(request);
+    public ResponseEntity<PaymentPrepareResponse> preparePayment(@RequestBody PaymentPrepareRequest request,
+                                                                    HttpServletRequest httpRequest) {
+        String userId = requireUserId(httpRequest);
+        PaymentPrepareResponse response = paymentService.prepare(request, userId);
         return ResponseEntity.ok(response);
+    }
+
+    private String requireUserId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            throw new CustomException(ErrorCode.AUTH_UNAUTHORIZED);
+        }
+        return (String) session.getAttribute("userId");
     }
 
     // 토스페이먼츠 결제 승인
     @PostMapping("/confirm")
-    public ResponseEntity<PaymentResponse> confirmPayment(@RequestBody PaymentRequest request) {
+    public ResponseEntity<PaymentResponse> confirmPayment(@RequestBody PaymentRequest request, HttpSession session) {
+        requireLogin(session);
         PaymentResponse response = paymentService.confirmPayment(request);
         return ResponseEntity.ok(response);
     }
@@ -78,5 +93,12 @@ public class PaymentController {
         response.sendRedirect(frontendUrl + "/payment/fail"
                 + "?message=" + URLEncoder.encode(message, StandardCharsets.UTF_8)
                 + "&code=" + code);
+    }
+
+    // 세션에 로그인된 회원(userId)이 없으면 401 - 비회원의 결제 API 접근 차단
+    private void requireLogin(HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            throw new CustomException(ErrorCode.AUTH_UNAUTHORIZED);
+        }
     }
 }
