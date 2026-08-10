@@ -15,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
+import com.Nbbang.backend.domain.product.entity.Participation;
+
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
@@ -77,16 +79,7 @@ public class ProductController {
 
     @GetMapping("/seller/{sellerId}/participations")
     public ResponseEntity<List<Map<String, Object>>> getParticipationsBySellerId(@PathVariable Long sellerId) {
-        List<Participation> participations = productService.getParticipationsBySellerId(sellerId);
-        List<Map<String, Object>> response = participations.stream().map(part ->
-            Map.of(
-                "id", part.getId(),
-                "buyerName", part.getBuyerName(),
-                "joinDate", part.getJoinDate(),
-                "product", Map.of("title", part.getProduct().getTitle())
-            )
-        ).toList();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(productService.getParticipationsBySellerId(sellerId));
     }
 
     @PutMapping("/{id}")
