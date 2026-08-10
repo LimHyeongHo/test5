@@ -74,7 +74,6 @@ const LoginPage = () => {
       }
     } catch (e) {
       alert("로그인 오류: " + e.message);
-      window.location.reload();
     } finally {
       setIsLoading(false);
     }
@@ -237,10 +236,6 @@ const LoginPage = () => {
     } catch (e) {
       setNeedsReissue(reissueNeeded);
       alert("로그인 오류: " + e.message);
-      // 재발급이 필요한 경우엔 새로고침하면 재발급 버튼이 다시 숨겨지므로, 이 경우만 새로고침을 건너뜀.
-      if (!reissueNeeded) {
-        window.location.reload();
-      }
     } finally {
       setIsLoading(false);
     }
