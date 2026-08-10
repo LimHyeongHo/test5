@@ -125,7 +125,7 @@ public class ProductService {
                 .toList();
     }
 
-    // 공동구매 참여
+    // 공동구매 참여 (userId는 로그인 세션에서 검증된 값만 들어와야 함 - 컨트롤러에서 보장)
     @Transactional
     public Product joinProduct(Long id, String userId) {
         Product product = getProductById(id);
