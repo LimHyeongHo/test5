@@ -1,0 +1,235 @@
+import React, { useState, useEffect } from 'react';
+//아래 import문 삭제
+// import { useParams, Link } from 'react-router-dom';
+import { Clock, Users, BookOpen, ChevronLeft, CheckCircle, Share2, AlertCircle, MessageCircle } from 'lucide-react';
+import Header from '../../../components/layout/Header';
+//[추가]
+import {useParams, Link, useNavigate } from 'react-router-dom';
+const BuyerProductDetailPage = () => {
+  // 1. 주소창에서 상품 고유 ID 추출 (예: /buyer/products/1 -> id = "1")
+  const { id } = useParams();
+  //[추가]
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(null);
+  const [isJoined, setIsJoined] = useState(false); // 테스트용: 공구 참여 상태 토글
+
+  useEffect(() => {
+    fetch(`http://localhost:8080/api/products/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error("상품을 찾을 수 없습니다.");
+        return res.json();
+      })
+      .then(data => {
+        // D-Day 계산 로직
+        let dDayText = '기한 없음';
+        if (data.deadline) {
+            const deadlineDate = new Date(data.deadline);
+            const today = new Date();
+            const diffTime = deadlineDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            dDayText = diffDays > 0 ? `D-${diffDays}` : (diffDays === 0 ? 'D-Day' : '마감');
+        }
+
+        setProduct({
+          id: String(data.productId),
+          title: data.title,
+          major: data.type === 'BOOK' ? '전공 도서' : '학과 물품',
+          author: data.author || '',
+          publisher: data.publisher || '',
+          originalPrice: data.originalPrice || data.price,
+          price: data.price,
+          currentCount: data.currentCount,
+          targetCount: data.targetCount,
+          deadline: data.deadline ? data.deadline.split('T')[0].replace(/-/g, '.') : '기한 없음',
+          dDay: dDayText,
+          status: data.status === 'OPEN' ? '모집 중' : '마감됨',
+          thumbnail: data.imageUrl || null,
+          description: data.description
+        });
+      })
+      .catch(err => {
+        console.error("상품 상세 로드 실패:", err);
+        alert("상품 정보를 불러오는데 실패했습니다.");
+      });
+  }, [id]);
+
+  // 공구 참여하기 버튼 클릭 핸들러
+  const handleJoinToggle = async () => {
+    if (!product) return;
+    
+    try {
+      if (!isJoined) {
+        //[추가] 참여 처리는 결제 성공 후 백엔드가 대신 해줌 — 여기선 결제 페이지로 이동만
+        //이전에 있던 if문 안 쪽은 전부 삭제함. else문은 그대로
+        navigate('/payment', { state: { product } });
+
+      } else {
+        // 백엔드 API 연동: 참여 인원 감소 (취소)
+        const res = await fetch(`http://localhost:8080/api/products/${product.id}/cancel`, { method: 'POST' });
+        if (!res.ok) throw new Error("참여 취소 실패");
+        const updatedProduct = await res.json();
+        
+        // 서버에서 받은 최신 인원으로 화면 업데이트
+        setProduct(prev => ({ ...prev, currentCount: updatedProduct.currentCount }));
+        setIsJoined(false);
+        alert('공동구매 참여가 취소되었습니다.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert("서버와 통신하는 중 문제가 발생했습니다.");
+    }
+  };
+
+  if (!product) return <div className="p-8 text-center font-bold">도서 정보를 불러오는 중입니다...</div>;
+
+  const progressRatio = Math.min(Math.round((product.currentCount / product.targetCount) * 100), 100);
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+      <Header />
+
+      <main className="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
+        
+        {/* 뒤로가기 네비게이션 */}
+        <div className="flex items-center justify-between">
+          <Link to="/buyer/products" className="flex items-center gap-1 text-sm font-bold text-gray-500 hover:text-gray-900 transition">
+            <ChevronLeft size={18} />
+            목록으로 돌아가기
+          </Link>
+          <button className="p-2 text-gray-400 hover:text-gray-600 bg-white border border-gray-200 rounded-xl transition shadow-sm">
+            <Share2 size={16} />
+          </button>
+        </div>
+
+        {/* 메인 레이아웃 그리드 (PC 2열 분할) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* 좌측 컬럼: 이미지 및 도서 상세 설명 */}
+          <div className="lg:col-span-7 flex flex-col gap-6">
+            {/* 큰 이미지 박스 */}
+            <div className="bg-white rounded-[32px] border border-gray-200 p-4 md:p-6 shadow-sm flex items-center justify-center aspect-[4/3] md:aspect-[16/10] overflow-hidden relative">
+              <img src={product.thumbnail} alt={product.title} className="w-full h-full object-cover rounded-2xl" />
+              <span className="absolute top-8 left-8 bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-md shadow-md">
+                {product.dDay} 마감
+              </span>
+            </div>
+
+            {/* 도서 소개글 */}
+            <div className="bg-white rounded-[32px] p-6 md:p-8 border border-gray-200 shadow-sm flex flex-col gap-4">
+              <h3 className="text-lg font-black text-gray-950 border-b border-gray-100 pb-3">도서 및 공구 소개</h3>
+              <p className="text-gray-600 text-sm md:text-base font-medium leading-relaxed whitespace-pre-wrap">
+                {product.description}
+              </p>
+            </div>
+
+            {/* 안전 거래 유의사항 (블록체인 강조) */}
+            <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100 flex gap-3">
+              <AlertCircle className="text-blue-500 shrink-0 mt-0.5" size={20} />
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-bold text-blue-900">N방 안전 투명 거래 안내</span>
+                <span className="text-xs text-blue-700 font-semibold leading-relaxed">
+                  본 플랫폼은 영수증 검증 및 결제 내역을 블록체인 상에 투명하게 기록하여 거래 조작을 방지합니다. 모집 정원이 100% 달성되면 스마트 계약에 의해 안전하게 거래 및 배부가 확정됩니다.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 우측 컬럼: 구매 및 공구 현황 컨트롤 패널 (스티키 고정 효과 추가) */}
+          <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-24">
+            <div className="bg-white rounded-[32px] p-6 md:p-8 border border-gray-200 shadow-sm flex flex-col gap-6">
+              
+              {/* 태그 & 학과 */}
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-black text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded">
+                  {product.major} 전공
+                </span>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
+                  <Clock size={14} />
+                  <span>마감일: {product.deadline}</span>
+                </div>
+              </div>
+
+              {/* 제목 및 저자 정보 */}
+              <div className="flex flex-col gap-1.5">
+                <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">
+                  {product.title}
+                </h1>
+                <span className="text-sm font-bold text-gray-400">
+                  {product.author} | {product.publisher}
+                </span>
+              </div>
+
+              {/* 가격 정보 (정가 대비 할인가 구조 적용) */}
+              <div className="bg-gray-50 rounded-2xl p-4 flex justify-between items-center">
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-400 line-through font-bold">정가 {product.originalPrice.toLocaleString()}원</span>
+                  <span className="text-xs text-emerald-600 font-black mt-0.5">
+                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% 파괴 할인가
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl md:text-3xl font-black text-blue-600">{product.price.toLocaleString()}원</span>
+                  <span className="text-xs text-gray-500 font-bold block mt-0.5">(인당 부담금)</span>
+                </div>
+              </div>
+
+              {/* 공구 진행률 상황판 */}
+              <div className="flex flex-col gap-3 pt-2">
+                <div className="flex justify-between items-end">
+                  <span className="text-sm font-black text-gray-900 flex items-center gap-1.5">
+                    <Users size={16} className="text-blue-500" />
+                    모집 현황 <span className="text-blue-600">{progressRatio}%</span>
+                  </span>
+                  <span className="text-sm font-bold text-gray-600">
+                    <span className="font-black text-gray-900">{product.currentCount}</span> / {product.targetCount} 명
+                  </span>
+                </div>
+                
+                {/* 진행 게이지 */}
+                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${isJoined ? 'bg-emerald-500' : 'bg-blue-600'}`} 
+                    style={{ width: `${progressRatio}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* 🌟 구매자 최종 액션 버튼 (참여 여부에 따른 조건부 UI) */}
+              <button
+                onClick={handleJoinToggle}
+                className={`w-full py-4 rounded-2xl font-black text-base md:text-lg transition-all shadow-md flex items-center justify-center gap-2 ${
+                  isJoined
+                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-500/20'
+                }`}
+              >
+                {isJoined ? (
+                  <>
+                    <CheckCircle size={20} />
+                    공구 탑승 완료 (취소하기)
+                  </>
+                ) : (
+                  '공동구매 참여하기 (N빵 탑승)'
+                )}
+              </button>
+
+              {/* 문의하기 (채팅) 버튼 */}
+              <button 
+                onClick={() => alert('채팅 기능은 준비 중입니다.')}
+                className="w-full py-3.5 rounded-2xl font-bold text-gray-700 bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2"
+              >
+                <MessageCircle size={18} />
+                판매자에게 문의하기 (채팅)
+              </button>
+
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  );
+};
+
+export default BuyerProductDetailPage;

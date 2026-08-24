@@ -1,0 +1,83 @@
+package com.Nbbang.backend.domain.chat.service;
+
+import com.Nbbang.backend.domain.auth.repository.UserAccountRepository;
+import com.Nbbang.backend.domain.chat.dto.ChatRoomResponse;
+import com.Nbbang.backend.domain.chat.entity.ChatRoom;
+import com.Nbbang.backend.domain.chat.repository.ChatRoomRepository;
+import com.Nbbang.backend.global.exception.CustomException;
+import com.Nbbang.backend.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ChatRoomService {
+
+    private final ChatRoomRepository chatRoomRepository;
+    private final UserAccountRepository userAccountRepository;
+
+    /** 내 채팅방 목록 조회 */
+    @Transactional(readOnly = true)
+    public List<ChatRoomResponse> getRooms(String myEmail) {
+        List<ChatRoom> rooms = chatRoomRepository
+                .findByBuyerEmailOrSellerEmailOrderByLastSentAtDesc(myEmail, myEmail);
+
+        return rooms.stream()
+                .map(room -> {
+                    String targetEmail = myEmail.equals(room.getBuyerEmail())
+                            ? room.getSellerEmail()
+                            : room.getBuyerEmail();
+                    String targetNickname = userAccountRepository.findById(targetEmail)
+                            .map(u -> u.getNickname())
+                            .orElse(targetEmail);
+                    return ChatRoomResponse.of(room, myEmail, targetNickname);
+                })
+                .collect(Collectors.toList());
+    }
+
+    /** 채팅방 생성 (이미 있으면 기존 방 반환) */
+    @Transactional
+    public ChatRoom findOrCreate(String buyerEmail, String sellerEmail, Long productId, String productName) {
+        return chatRoomRepository
+                .findByBuyerEmailAndSellerEmailAndProductId(buyerEmail, sellerEmail, productId)
+                .orElseGet(() -> chatRoomRepository.save(
+                        ChatRoom.create(buyerEmail, sellerEmail, productId, productName)));
+    }
+
+    /** 채팅방 조회 */
+    @Transactional(readOnly = true)
+    public ChatRoom getRoom(Long roomId) {
+        return chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
+    }
+
+    /** 메시지 전송 후 채팅방 마지막 메시지 업데이트 */
+    @Transactional
+    public void updateLastMessage(Long roomId, String senderEmail, String content) {
+        ChatRoom room = getRoom(roomId);
+        room.setLastMessage(content);
+        room.setLastSentAt(java.time.LocalDateTime.now());
+
+        // 상대방 안읽음 카운트 증가
+        if (senderEmail.equals(room.getBuyerEmail())) {
+            room.setSellerUnreadCount(room.getSellerUnreadCount() + 1);
+        } else {
+            room.setBuyerUnreadCount(room.getBuyerUnreadCount() + 1);
+        }
+    }
+
+    /** 읽음 처리 — 내 안읽음 카운트 초기화 */
+    @Transactional
+    public void resetUnreadCount(Long roomId, String myEmail) {
+        ChatRoom room = getRoom(roomId);
+        if (myEmail.equals(room.getBuyerEmail())) {
+            room.setBuyerUnreadCount(0);
+        } else {
+            room.setSellerUnreadCount(0);
+        }
+    }
+}
